@@ -46,6 +46,11 @@ const model = {
   token_type: null,
 }
 
+function must_be_logged() {
+  console.error('You must be logged before using that command. (myges login)')
+  return process.exit(1)
+}
+
 /**
  * @returns {Promise<Config>} 
  */
@@ -54,9 +59,8 @@ async function load(exit_if_not_logged = false) {
     const config = await fs.readFile(config_path)
     const parsed = JSON.parse(config)
 
-    if (exit_if_not_logged || !parsed.access_token || !parsed.token_type) {
-      console.error('You must be logged before using that command. (ges login)')
-      return process.exit(1)
+    if (exit_if_not_logged && (!parsed.access_token || !parsed.token_type)) {
+      return must_be_logged()
     }
 
     return Object.keys(model).reduce((o, k) => {
@@ -64,6 +68,10 @@ async function load(exit_if_not_logged = false) {
       return o
     }, {})
   } catch (_) {
+    if (exit_if_not_logged) {
+      return must_be_logged()
+    }
+
     return model
   }
 }
