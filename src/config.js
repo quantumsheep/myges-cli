@@ -54,7 +54,7 @@ async function load(exit_if_not_logged = false) {
     const config = await fs.readFile(config_path)
     const parsed = JSON.parse(config)
 
-    if (exit_if_not_logged && (!parsed.access_token || !parsed.token_type)) {
+    if (exit_if_not_logged || !parsed.access_token || !parsed.token_type) {
       console.error('You must be logged before using that command. (ges login)')
       return process.exit(1)
     }
