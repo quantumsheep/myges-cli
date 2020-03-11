@@ -7,7 +7,7 @@ const configurator = require('./config')
 const api = require('./ges-api')
 
 const program = new commander.Command()
-program.version('1.0.4')
+program.version('1.0.5')
 
 program
   .command('login')
