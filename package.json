@@ -9,7 +9,7 @@
     "dev": "nodemon ."
   },
   "bin": {
-    "warshield": "./src/app.js"
+    "myges": "./src/app.js"
   },
   "contributors": [
     {
