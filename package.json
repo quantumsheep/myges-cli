@@ -1,0 +1,31 @@
+{
+  "name": "myges",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node --no-warnings .",
+    "dev": "nodemon ."
+  },
+  "bin": {
+    "warshield": "./src/app.js"
+  },
+  "contributors": [
+    {
+      "name": "Nathanael Demacon",
+      "email": "nathanael.dmc@outlook.fr"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/quantumsheep/myges-cli.git"
+  },
+  "author": "Nathanael Demacon <nathanael.dmc@outlook.fr>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "commander": "^4.1.1",
+    "inquirer": "^7.1.0"
+  }
+}
