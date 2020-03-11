@@ -214,4 +214,8 @@ program
 
 program.action(async () => program.help())
 
-program.parse(process.argv)
+if (process.argv.length < 3) {
+  program.help()
+} else {
+  program.parse(process.argv)
+}
