@@ -212,6 +212,40 @@ program
     }
   })
 
+program
+  .command('request <method> <url>')
+  .option('-d, --debug', 'debug mode')
+  .option('-r, --raw', 'output the raw data')
+  .option('-t, --table', 'output data in a table')
+  .option('-b, --body <value>', 'add a body (must be a JSON)', '{}')
+  .description('make a request to the API url')
+  .action(async (method, url, options) => {
+    try {
+      const config = await configurator.load(true)
+
+      const result = await api.request(method, url, config, {
+        body: options.body,
+        headers: {
+          'Content-type': 'application/json; charset=utf-8',
+        },
+      })
+
+      if (options.raw) {
+        console.log(JSON.stringify(result))
+      } else if (options.table) {
+        console.table(result)
+      } else {
+        console.log(result)
+      }
+    } catch (e) {
+      if (options.debug) {
+        console.error(e)
+      } else {
+        console.error(e.message)
+      }
+    }
+  })
+
 program.action(async () => program.help())
 
 if (process.argv.length < 3) {
