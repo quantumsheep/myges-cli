@@ -282,7 +282,7 @@ program
 
           week = answers.week.split(' ')[0]
         } else {
-          week = `${middle.getDate() + pass}-${middle.getMonth() + 1}-${middle.getFullYear()}`
+          week = `${middle.getDate()}-${middle.getMonth() + 1}-${middle.getFullYear()}`
         }
       }
 
@@ -290,7 +290,7 @@ program
       let start = now
       let end = now
 
-      const pass = +(week.split('+')[1] || 0)
+      let pass = +(week.split('+')[1] || 0)
 
       if (week.startsWith('today')) {
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + pass, 00)
