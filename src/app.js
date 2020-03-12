@@ -407,6 +407,17 @@ program
     }
   })
 
+program
+  .command('contribute')
+  .description('show useful links')
+  .action(() => {
+    console.table({
+      'Réseau GES (GHG Network)': 'http://www.reseau-ges.fr/',
+      'GitHub repository': 'https://github.com/quantumsheep/myges-cli',
+      'Issues': 'https://github.com/quantumsheep/myges-cli/issues',
+    })
+  })
+
 program.action(async () => program.help())
 
 if (process.argv.length < 3) {
