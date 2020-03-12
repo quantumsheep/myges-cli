@@ -213,6 +213,107 @@ program
   })
 
 program
+  .command('agenda [week]')
+  .option('-d, --debug', 'debug mode')
+  .option('-r, --raw', 'output the raw data')
+  .option('-i, --interactive', 'interactive mode')
+  .description('list courses')
+  .action(async (week, options) => {
+    try {
+      const config = await configurator.load(true)
+
+      if (!week) {
+        const now = new Date()
+        const middle = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay(), 23)
+
+        if (options.interactive) {
+          /**
+         * @param {Date} start 
+         */
+          const to_range = start => {
+            const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
+
+            const start_str = `${('' + start.getDate()).padStart(2, '0')}-${('' + (start.getMonth() + 1)).padStart(2, '0')}-${start.getFullYear()}`
+            const end_str = `${('' + end.getDate()).padStart(2, '0')}-${('' + (end.getMonth() + 1)).padStart(2, '0')}-${end.getFullYear()}`
+
+            return `${start_str} ${end_str}`
+          }
+
+          const before = [...Array(9).keys()].map(i => to_range(new Date(middle.getFullYear(), middle.getMonth(), middle.getDate() - (-(i + 1) * 7), 23))).reverse()
+          const after = [...Array(9).keys()].map(i => to_range(new Date(middle.getFullYear(), middle.getMonth(), middle.getDate() - ((i + 1) * 7), 23)))
+
+          const middle_range = to_range(middle)
+
+          const answers = await inquirer.prompt([
+            {
+              message: 'Choose a year',
+              name: 'week',
+              type: 'list',
+              choices: [
+                ...before,
+                middle_range,
+                ...after,
+              ],
+              default: middle_range,
+            }
+          ])
+
+          week = answers.week.split(' ')[0]
+        } else {
+          week = `${middle.getDate()}-${middle.getMonth() + 1}-${middle.getFullYear()}`
+        }
+      }
+
+      const [date, month, year] = week.split('-').map(v => parseInt(v, 10))
+
+      const selected = new Date(year, month - 1, date, 23)
+
+      const start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() - selected.getDay(), 23)
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
+
+      console.log(`Loading agenda from ${start.toDateString()} to ${end.toDateString()}...`)
+
+      const agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+
+      if (options.raw) {
+        console.log(JSON.stringify(agenda))
+      } else {
+        if (agenda.length === 0) {
+          console.log('Nothing to display in this dates range.')
+        }
+
+        const days = [...new Set(agenda.map(activity => new Date(activity.start_date).toDateString()))]
+
+        days.forEach(day => {
+          const activities = agenda.filter(activity => new Date(activity.start_date).toDateString() === day).map(activity => {
+            const activity_start = new Date(activity.start_date)
+            const activity_end = new Date(activity.end_date)
+
+            return {
+              'Day': activity_start.toDateString(),
+              'Start': activity_start.toTimeString(),
+              'End': activity_end.toTimeString(),
+              'Rooms': (activity.rooms || []).reduce((str, room) => {
+                return `${str ? `${str} - ` : ''}${room.campus} ${room.name} (${room.floor})`
+              }, ''),
+              'Name': activity.name,
+              'Teacher': activity.teacher,
+            }
+          })
+
+          console.table(activities)
+        })
+      }
+    } catch (e) {
+      if (options.debug) {
+        console.error(e)
+      } else {
+        console.error(e.message)
+      }
+    }
+  })
+
+program
   .command('request <method> <url>')
   .option('-d, --debug', 'debug mode')
   .option('-r, --raw', 'output the raw data')
