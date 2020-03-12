@@ -285,16 +285,26 @@ program
         }
       }
 
-      const [date, month, year] = week.split('-').map(v => parseInt(v, 10))
+      let agenda = []
 
-      const selected = new Date(year, month - 1, date, 23)
+      if (week === 'today') {
+        const now = new Date()
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 00)
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23)
 
-      const start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() - selected.getDay(), 23)
-      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
+        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+      } else {
+        const [date, month, year] = week.split('-').map(v => parseInt(v, 10))
 
-      console.log(`Loading agenda from ${start.toDateString()} to ${end.toDateString()}...`)
+        const selected = new Date(year, month - 1, date, 23)
 
-      const agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+        const start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() - selected.getDay(), 23)
+        const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
+
+        console.log(`Loading agenda from ${start.toDateString()} to ${end.toDateString()}...`)
+
+        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+      }
 
       if (options.raw) {
         console.log(JSON.stringify(agenda))
