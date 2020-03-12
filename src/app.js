@@ -251,7 +251,7 @@ program
   .option('-d, --debug', 'debug mode')
   .option('-r, --raw', 'output the raw data')
   .option('-i, --interactive', 'interactive mode')
-  .description('list courses')
+  .description('fetch agenda')
   .action(async (week, options) => {
     try {
       const config = await configurator.load(true)
