@@ -249,7 +249,7 @@ program
 
           const answers = await inquirer.prompt([
             {
-              message: 'Choose a year',
+              message: 'Choose a week',
               name: 'week',
               type: 'list',
               choices: [
