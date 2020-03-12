@@ -1,6 +1,6 @@
 {
   "name": "myges",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "",
   "keywords": [],
   "main": "src/app.js",
@@ -26,6 +26,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "commander": "^4.1.1",
-    "inquirer": "^7.1.0"
+    "inquirer": "^7.1.0",
+    "update-notifier": "^4.1.0"
   }
 }
