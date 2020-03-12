@@ -9,9 +9,12 @@ const pkg = require('../package.json')
 const notifier = update_notifier({
   pkg,
   shouldNotifyInNpmScript: true,
+  // updateCheckInterval: 0,
 })
 
-notifier.notify()
+notifier.notify({
+  isGlobal: true,
+})
 
 const configurator = require('./config')
 const api = require('./ges-api')
