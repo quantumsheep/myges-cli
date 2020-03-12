@@ -379,7 +379,7 @@ program
   .option('-r, --raw', 'output the raw data')
   .option('-t, --table', 'output data in a table')
   .option('-b, --body <value>', 'add a body (must be a JSON)', '{}')
-  .description('make a request to the API url')
+  .description('make a request to the API')
   .action(async (method, url, options) => {
     try {
       const config = await configurator.load(true)
