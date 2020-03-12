@@ -37,6 +37,24 @@ program
   })
 
 program
+  .command('logout')
+  .option('-d, --debug', 'debug mode')
+  .description('remove the saved auth informations')
+  .action(async () => {
+    try {
+      await configurator.erase()
+
+      console.log('Successfully logged out!')
+    } catch (e) {
+      if (options.debug) {
+        console.error(e)
+      } else {
+        console.error(e.message)
+      }
+    }
+  })
+
+program
   .command('absences [year]')
   .option('-d, --debug', 'debug mode')
   .option('-r, --raw', 'output the raw data')

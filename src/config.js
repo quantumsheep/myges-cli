@@ -105,8 +105,13 @@ async function load(exit_if_not_logged = false) {
   }
 }
 
+function erase() {
+  return fs.writeFile(config_path, JSON.stringify({}))
+}
+
 module.exports = {
   prompt_credentials,
   save,
   load,
+  erase,
 }
