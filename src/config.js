@@ -114,6 +114,6 @@ function erase() {
 module.exports = {
   prompt_credentials,
   save,
-  laod,
+  load,
   erase,
 }
