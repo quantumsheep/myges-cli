@@ -59,7 +59,7 @@ function save(config) {
 }
 
 function must_be_logged() {
-  console.error('You must be logged before using that command. (myges login)')
+  console.error('You must be logged in before using that command. (myges login)')
   return process.exit(1)
 }
 
