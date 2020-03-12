@@ -6,7 +6,7 @@ const axios = require('axios').default
  * @param {import('./config').Config} config 
  * @param {import('axios').AxiosRequestConfig} request_config 
  */
-exports.request = async function request(method, url, config, request_config = {}) {
+async function request(method, url, config, request_config = {}) {
   const { headers, ...others } = request_config
 
   const { data } = await axios.request({
@@ -25,6 +25,11 @@ exports.request = async function request(method, url, config, request_config = {
 /**
  * @param {Config} config 
  */
-exports.get_years = function get_years(config) {
+function get_years(config) {
   return request('GET', '/me/years', config)
+}
+
+module.exports = {
+  request,
+  get_years,
 }
