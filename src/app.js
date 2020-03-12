@@ -243,8 +243,9 @@ program
     try {
       const config = await configurator.load(true)
 
+      const now = new Date()
+
       if (!week) {
-        const now = new Date()
         const middle = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay(), 23)
 
         if (options.interactive) {
@@ -281,42 +282,46 @@ program
 
           week = answers.week.split(' ')[0]
         } else {
-          week = `${middle.getDate()}-${middle.getMonth() + 1}-${middle.getFullYear()}`
+          week = `${middle.getDate() + pass}-${middle.getMonth() + 1}-${middle.getFullYear()}`
         }
       }
 
       let agenda = []
+      let start = now
+      let end = now
 
-      if (week === 'today') {
-        const now = new Date()
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 00)
-        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23)
+      const pass = +(week.split('+')[1] || 0)
 
-        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
-      } else if (week === 'tomorrow') {
-        const now = new Date()
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 00)
-        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23)
-
-        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
-      } else if (week === 'yesterday') {
-        const now = new Date()
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 00)
-        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23)
-
-        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+      if (week.startsWith('today')) {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + pass, 00)
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + pass, 23)
+      } else if (week.startsWith('tomorrow')) {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1 + pass, 00)
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1 + pass, 23)
+      } else if (week.startsWith('yesterday')) {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1 - pass, 00)
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1 - pass, 23)
       } else {
-        const [date, month, year] = week.split('-').map(v => parseInt(v, 10))
+        if (week.startsWith('week')) {
+          pass *= 7
+          week = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`
+        }
 
-        const selected = new Date(year, month - 1, date, 23)
+        const [date, month = now.getMonth() + 1, year = now.getFullYear()] = week.split(/[\-\+]/g).map(v => parseInt(v, 10))
 
-        const start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() - selected.getDay(), 23)
-        const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
+        const selected = new Date(year, month - 1, date + pass, 23)
 
-        console.log(`Loading agenda from ${start.toDateString()} to ${end.toDateString()}...`)
-
-        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+        start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() - selected.getDay(), 23)
+        end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7, 23)
       }
+
+      if (start.toDateString() === end.toDateString()) {
+        console.log(`Loading agenda for ${start.toDateString()}...`)
+      } else {
+        console.log(`Loading agenda from ${start.toDateString()} to ${end.toDateString()}...`)
+      }
+
+      agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
 
       if (options.raw) {
         console.log(JSON.stringify(agenda))
