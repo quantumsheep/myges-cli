@@ -293,6 +293,12 @@ program
         const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23)
 
         agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
+      } else if (week === 'tomorrow') {
+        const now = new Date()
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 00)
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23)
+
+        agenda = await api.request('GET', `/me/agenda?start=${start.getTime()}&end=${end.getTime()}`, config)
       } else {
         const [date, month, year] = week.split('-').map(v => parseInt(v, 10))
 
