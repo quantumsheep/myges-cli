@@ -18,7 +18,7 @@ const token = require('./token')
 /**
  * @returns {Promise<import('./token').AccessToken & { username: string }>} 
  */
-async function prompt_credentials() {
+exports.prompt_credentials = async function prompt_credentials() {
   try {
     const { username, password } = await inquirer.prompt([
       {
@@ -54,7 +54,7 @@ const model = {
 /**
  * @param {Config} config 
  */
-function save(config) {
+exports.save = function save(config) {
   return fs.writeFile(config_path, JSON.stringify(config))
 }
 
@@ -66,7 +66,7 @@ function must_be_logged() {
 /**
  * @returns {Promise<Config>} 
  */
-async function load(exit_if_not_logged = false) {
+exports.load = async function load(exit_if_not_logged = false) {
   try {
     const config = await fs.readFile(config_path)
     /** @type {Config} */
@@ -105,13 +105,6 @@ async function load(exit_if_not_logged = false) {
   }
 }
 
-function erase() {
+exports.erase = function erase() {
   return fs.writeFile(config_path, JSON.stringify({}))
-}
-
-module.exports = {
-  prompt_credentials,
-  save,
-  load,
-  erase,
 }
