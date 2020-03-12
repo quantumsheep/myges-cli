@@ -2,7 +2,6 @@ const fs = require('fs').promises
 const path = require('path')
 const inquirer = require('inquirer')
 
-const root = path.dirname(require.main.filename)
 const homedir = require('os').homedir()
 
 const config_path = path.resolve(homedir, '.myges')
