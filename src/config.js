@@ -3,7 +3,9 @@ const path = require('path')
 const inquirer = require('inquirer')
 
 const root = path.dirname(require.main.filename)
-const config_path = path.resolve(root, '..', 'config.json')
+const homedir = require('os').homedir()
+
+const config_path = path.resolve(homedir, '.myges')
 
 const token = require('./token')
 
