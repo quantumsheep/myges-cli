@@ -3,6 +3,16 @@
 const commander = require('commander')
 const inquirer = require('inquirer')
 
+const update_notifier = require('update-notifier');
+const pkg = require('../package.json')
+
+const notifier = update_notifier({
+  pkg,
+  shouldNotifyInNpmScript: true,
+})
+
+notifier.notify()
+
 const configurator = require('./config')
 const api = require('./ges-api')
 
