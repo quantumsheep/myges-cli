@@ -312,9 +312,8 @@ program
 
             return {
               'Day': activity_start.toDateString(),
-              'Start': activity_start.toTimeString(),
-              'End': activity_end.toTimeString(),
-              'Rooms': (activity.rooms || []).reduce((str, room) => {
+              'Schedule': `${activity_start.getHours().toString().padStart(2, '0')}:${activity_start.getMinutes().toString().padStart(2, '0')} -> ${activity_end.getHours().toString().padStart(2, '0')}:${activity_end.getMinutes().toString().padStart(2, '0')}`,
+              'Room(s)': (activity.rooms || []).reduce((str, room) => {
                 return `${str ? `${str} - ` : ''}${room.campus} ${room.name} (${room.floor})`
               }, ''),
               'Name': activity.name,
