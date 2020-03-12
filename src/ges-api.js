@@ -4,7 +4,7 @@ const axios = require('axios').default
  * @param {string} method 
  * @param {string} url 
  * @param {import('./config').Config} config 
- * @param {{ [key: string]: any }} request_config 
+ * @param {import('axios').AxiosRequestConfig} request_config 
  */
 async function request(method, url, config, request_config = {}) {
   const { headers, ...others } = request_config

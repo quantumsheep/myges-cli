@@ -15,12 +15,15 @@ program
   .description('sign in to an account')
   .action(async () => {
     try {
-      const config = await configurator.load()
+      /** @type {Config} */
+      const config = await configurator.load() || {}
 
-      const { token_type, access_token } = await configurator.prompt_credentials()
+      const token = await configurator.prompt_credentials()
 
-      config.token_type = token_type
-      config.access_token = access_token
+      config.username = token.username
+      config.token_type = token.token_type
+      config.access_token = token.access_token
+      config.expires = Date.now() + (parseInt(token.expires_in, 10) * 1000)
 
       await configurator.save(config)
       console.log('Successfully logged in!')
