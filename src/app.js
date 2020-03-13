@@ -388,7 +388,7 @@ program
       const config = await configurator.load(true)
 
       const result = await api.request(method, url, config, {
-        body: options.body,
+        data: options.body,
         headers: {
           'Content-type': 'application/json; charset=utf-8',
         },
