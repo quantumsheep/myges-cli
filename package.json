@@ -25,6 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.19.2",
+    "colors": "^1.4.0",
     "commander": "^4.1.1",
     "inquirer": "^7.1.0",
     "update-notifier": "^4.1.0"

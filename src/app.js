@@ -1,7 +1,10 @@
 #!/usr/bin/env node --no-warnings
 
+const readline = require('readline')
+
 const commander = require('commander')
 const inquirer = require('inquirer')
+const colors = require('colors')
 
 const update_notifier = require('update-notifier')
 const pkg = require('../package.json')
@@ -517,6 +520,10 @@ program
         project = await api.request('GET', `/me/projects/${id}`, config)
       }
 
+      if (!project) {
+        return console.error(`Project ${id} not found.`)
+      }
+
       const { uid } = await api.request('GET', '/me/profile', config)
 
       if (!action || action === 'show') {
@@ -619,6 +626,83 @@ program
             }
           }
         }
+      } else if (action === 'chat') {
+        const group = project.groups.find(group => {
+          return !!(group.project_group_students || []).find(student => student.u_id === uid)
+        })
+
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        })
+
+        rl.once('SIGINT', () => {
+          process.exit(0)
+        })
+
+        const messages = await api.request('GET', `/me/projectGroups/${group.project_group_id}/messages`, config)
+
+        function display_message(message) {
+          const date = new Date(message.date)
+          const date_str = `${date.getDate().toString().padStart(2, '0')}/${date.getMonth().toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+
+          let prefix = ''
+
+          if (message.uid === uid) {
+            prefix = colors.grey(`[${date_str}] You`)
+          } else {
+            prefix = colors.cyan(`[${date_str}] ${message.firstname} ${message.name}`)
+          }
+
+          console.log(`${prefix}${colors.grey(':')} ${message.message}`)
+        }
+
+        messages.forEach(display_message)
+
+        let timer = null
+
+        async function update_messages() {
+          if (timer) {
+            clearTimeout(timer)
+          }
+
+          process.stdout.clearLine()
+          process.stdout.cursorTo(0)
+
+          const data = await api.request('GET', `/me/projectGroups/${group.project_group_id}/messages`, config)
+          const new_messages = data.slice(messages.length)
+
+          for (const message of new_messages) {
+            display_message(message)
+            messages.push(message)
+          }
+
+          timer = setTimeout(update_messages, 20000)
+          rl.prompt()
+        }
+
+        rl.on('line', async (message) => {
+          try {
+            const messages = await api.request('POST', `/me/projectGroups/${group.project_group_id}/messages`, config, {
+              data: {
+                projectGroupId: group.project_group_id,
+                message,
+              },
+            })
+
+            await update_messages()
+          } catch (e) {
+            if (options.debug) {
+              console.error(e)
+            } else {
+              console.error(e.message)
+            }
+
+            rl.prompt()
+          }
+        })
+
+        await update_messages()
       }
     } catch (e) {
       if (options.debug) {
