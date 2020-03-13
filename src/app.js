@@ -3,7 +3,7 @@
 const commander = require('commander')
 const inquirer = require('inquirer')
 
-const update_notifier = require('update-notifier');
+const update_notifier = require('update-notifier')
 const pkg = require('../package.json')
 
 const notifier = update_notifier({
@@ -397,6 +397,228 @@ program
         console.table(result)
       } else {
         console.log(result)
+      }
+    } catch (e) {
+      if (options.debug) {
+        console.error(e)
+      } else {
+        console.error(e.message)
+      }
+    }
+  })
+
+program
+  .command('projects [year]')
+  .option('-d, --debug', 'debug mode')
+  .option('-r, --raw', 'output the raw data')
+  .description("list projects")
+  .action(async (year, options) => {
+    try {
+      const config = await configurator.load(true)
+
+      if (!year) {
+        const answers = await inquirer.prompt([
+          {
+            message: 'Choose a year',
+            name: 'year',
+            type: 'list',
+            choices: await api.get_years(config)
+          }
+        ])
+
+        year = answers.year
+      }
+
+      const projects = await api.request('GET', `/me/${year}/projects`, config)
+
+      if (options.raw) {
+        console.log(JSON.stringify(projects))
+      } else {
+        const { uid } = await api.request('GET', '/me/profile', config)
+
+        console.table(projects.map(project => {
+          const group = project.groups.find(group => {
+            return !!(group.project_group_students || []).find(student => student.u_id === uid)
+          })
+
+          let group_infos = {}
+
+          if (group) {
+            group_infos = {
+              'Group': `${group.group_name} (${group.project_group_id})`,
+            }
+
+            if (group.date_presentation > 0) {
+              const date = new Date(group.date_presentation)
+
+              group_infos['Presentation Date'] = `${date.toDateString()} at ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+            }
+          }
+
+          return {
+            'ID': project.project_id,
+            'Name': project.name,
+            ...group_infos,
+          }
+        }))
+      }
+    } catch (e) {
+      if (options.debug) {
+        console.error(e)
+      } else {
+        console.error(e.message)
+      }
+    }
+  })
+
+program
+  .command('project [id] [action] [value]')
+  .option('-d, --debug', 'debug mode')
+  .option('-r, --raw', 'output the raw data')
+  .option('-y, --year', 'pre-select a year')
+  .description("show a project's informations - possible actions: show, join, quit")
+  .action(async (id, action, value, options) => {
+    try {
+      const config = await configurator.load(true)
+
+      let project = null
+
+      if (!id) {
+        if (!options.year) {
+          const answers = await inquirer.prompt([
+            {
+              message: 'Choose a year',
+              name: 'year',
+              type: 'list',
+              choices: await api.get_years(config)
+            }
+          ])
+
+          options.year = answers.year
+        }
+
+        const projects = await api.request('GET', `/me/${options.year}/projects`, config)
+
+        const answers = await inquirer.prompt([
+          {
+            message: 'Choose a project',
+            name: 'project',
+            type: 'list',
+            choices: projects.map(project => ({
+              name: project.name,
+              value: project.project_id,
+            })),
+          }
+        ])
+
+        id = answers.project
+        project = projects.find(project => project.project_id === id)
+      } else {
+        project = await api.request('GET', `/me/projects/${id}`, config)
+      }
+
+      const { uid } = await api.request('GET', '/me/profile', config)
+
+      if (!action || action === 'show') {
+        if (options.raw) {
+          console.log(JSON.stringify(project))
+        } else {
+          const group = project.groups.find(group => {
+            return !!(group.project_group_students || []).find(student => student.u_id === uid)
+          })
+
+          let group_infos = {}
+
+          if (group) {
+            group_infos = {
+              'Group': `${group.group_name} (${group.project_group_id})`,
+            }
+
+            if (group.date_presentation > 0) {
+              const date = new Date(group.date_presentation)
+
+              group_infos['Presentation Date'] = `${date.toDateString()} at ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+            }
+          }
+
+          console.table({
+            'ID': project.project_id,
+            'Name': project.name,
+            ...group_infos,
+          })
+        }
+      } else if (action === 'join') {
+        let group = project.groups.find(group => {
+          return !!(group.project_group_students || []).find(student => student.u_id === uid)
+        })
+
+        if (group) {
+          return console.error(`You already are in a group for this project.`)
+        }
+
+        if (!value) {
+          return console.error(`You need to specify the group's number. Autorized range for this project: 1-${project.groups.length}. You can also pass its ID.`)
+        }
+
+        value = parseInt(value)
+        if (isNaN(value)) {
+          return console.error('Incorrect group number.')
+        }
+
+        const groups = project.groups.sort((a, b) => a.project_group_id - b.project_group_id)
+
+        if (value > groups.length) {
+          group = groups.find(group => group.project_group_id === value)
+        } else {
+          group = groups[value]
+        }
+
+        if (!group) {
+          return console.error('Choosen group not found.')
+        }
+
+        try {
+          const res = await api.request('POST', `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`, config)
+
+          console.log('Successfully joined the group!')
+        } catch (e) {
+          if (options.debug) {
+            console.error(e)
+          } else {
+            console.error("Failed to join the project's group.")
+          }
+        }
+      } else if (action === 'quit') {
+        const group = project.groups.find(group => {
+          return !!(group.project_group_students || []).find(student => student.u_id === uid)
+        })
+
+        if (!group) {
+          return console.error('You are not actually in a group.')
+        }
+
+        const { confirm } = await inquirer.prompt([
+          {
+            message: `Do you really want to quit ${group.group_name}?`,
+            name: 'confirm',
+            type: 'confirm',
+            default: false,
+          }
+        ])
+
+        if (confirm) {
+          try {
+            const res = await api.request('DELETE', `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`, config)
+
+            console.log('Successfully quitted the group!')
+          } catch (e) {
+            if (options.debug) {
+              console.error(e.response.data)
+            } else {
+              console.error("Failed to quit the project's group.")
+            }
+          }
+        }
       }
     } catch (e) {
       if (options.debug) {
