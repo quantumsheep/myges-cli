@@ -90,7 +90,7 @@ async function load(exit_if_not_logged = false) {
       parsed.access_token = access_token
       parsed.token_type = token_type
 
-      save(parsed)
+      await save(parsed)
     }
 
     return Object.keys(model).reduce((o, k) => {
