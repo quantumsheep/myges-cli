@@ -479,7 +479,7 @@ program
   .option('-d, --debug', 'debug mode')
   .option('-r, --raw', 'output the raw data')
   .option('-y, --year', 'pre-select a year')
-  .description("show a project's informations - possible actions: show, join, quit")
+  .description("show a project's informations - possible actions: show, groups, join, quit")
   .action(async (id, action, value, options) => {
     try {
       const config = await configurator.load(true)
@@ -642,6 +642,15 @@ program
             }
           }
         }
+      } else if (action === 'groups') {
+        console.table(project.groups.map(group => ({
+          id: group.project_group_id,
+          name: group.group_name,
+          ...(group.project_group_students || []).map(student => `${student.firstname} ${student.name}`).reduce((acc, v, i) => {
+            acc[`Student ${i + 1}`] = v
+            return acc
+          }, {})
+        })))
       } else if (action === 'chat') {
         const group = project.groups.find(group => {
           return !!(group.project_group_students || []).find(student => student.u_id === uid)
