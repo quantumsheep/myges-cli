@@ -575,9 +575,9 @@ program
         const groups = project.groups.sort((a, b) => a.project_group_id - b.project_group_id)
 
         if (value > groups.length) {
-          group = groups.find(group => group.project_group_id === value)
+          group = groups.find(group => group.project_group_id == value)
         } else {
-          group = groups[value]
+          group = groups[value - 1]
         }
 
         if (!group) {
