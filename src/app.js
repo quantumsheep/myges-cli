@@ -560,11 +560,27 @@ program
         })
 
         if (group) {
-          return console.error(`You already are in a group for this project.`)
+          return console.error(`You already are in a group for this project (${group.group_name}).`)
         }
 
         if (!value) {
-          return console.error(`You need to specify the group's number. Autorized range for this project: 1-${project.groups.length}. You can also pass its ID.`)
+          const answers = await inquirer.prompt([
+            {
+              message: 'Select the group to join',
+              name: 'group',
+              type: 'list',
+              choices: project.groups.map(group => {
+                const students = (group.project_group_students || []).map(student => `${student.firstname} ${student.name}`)
+
+                return {
+                  name: group.group_name + (students.length > 0 ? `(${students.join(', ')})` : ''),
+                  value: group.project_group_id,
+                }
+              }),
+            }
+          ])
+
+          value = answers.group
         }
 
         value = parseInt(value)
