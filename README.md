@@ -50,3 +50,13 @@ A shifting can be added to the specified week:
 - `myges agenda today+-2` -> Shows the agenda of 2 days ago from today
 
 Those shifts can be applied to any manual week input using the same format (`+n`).
+
+## Project management
+Using the CLI, you can list available projects and project groups.
+You can also join or quit a project group.
+
+- `myges projects` -> List available projects
+- `myges project <id>` -> Give information about the selected project (replace *`<id>`* by the actual group's id given in the projects list)
+- `myges project <id> groups` -> List available groups for the specified project
+- `myges project <id> join [group]` -> Join a group. You can specify the group by replacing the optional *`[group]`* argument, else it will prompt a selector
+- `myges project <id> quit` -> Quit the current group you're in. A confirmation will be required before executing the request
