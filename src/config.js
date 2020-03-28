@@ -86,9 +86,10 @@ async function load(exit_if_not_logged = false) {
         },
       ])
 
-      const { access_token, token_type } = await token.authenticate(parsed.username, password)
-      parsed.access_token = access_token
-      parsed.token_type = token_type
+      const info = await token.authenticate(parsed.username, password)
+      parsed.access_token = info.access_token
+      parsed.token_type = info.token_type
+      parsed.expires = Date.now() + (parseInt(info.expires_in, 10) * 1000)
 
       await save(parsed)
     }
