@@ -5,6 +5,7 @@ const readline = require('readline')
 const commander = require('commander')
 const inquirer = require('inquirer')
 const colors = require('colors')
+const moment = require('moment')
 
 const update_notifier = require('update-notifier')
 const pkg = require('../package.json')
@@ -21,6 +22,7 @@ notifier.notify({
 
 const configurator = require('./config')
 const api = require('./ges-api')
+const display = require('./display')
 
 const program = new commander.Command()
 program.version(pkg.version)
@@ -97,9 +99,9 @@ program
       if (options.raw) {
         console.log(JSON.stringify(absences))
       } else {
-        console.table(absences.map(absence => ({
+        display.table(absences.map(absence => ({
           'Year': absence.year,
-          'Date': new Date(absence.date).toLocaleString(),
+          'Date': moment(absence.date).format('DD/MM/YYYY, HH:mm'),
           'Course name': absence.course_name,
           'Justified': absence.justified,
           'Trimester': absence.trimester_name,
@@ -144,7 +146,7 @@ program
         const trimesters = [...new Set(courses.map(course => course.trimester))].sort()
 
         trimesters.forEach(trimester => {
-          console.table(courses.filter(course => course.trimester === trimester).map(course => ({
+          display.table(courses.filter(course => course.trimester === trimester).map(course => ({
             'rc_id': course.rc_id,
             'Year': course.year,
             'Trimester': `${course.trimester} (${course.trimester_id})`,
@@ -191,9 +193,7 @@ program
       if (options.raw) {
         console.log(JSON.stringify(grades))
       } else {
-        const trimesters = [...new Set(grades.map(grade => grade.trimester))].sort()
-
-        trimesters.forEach(trimester => {
+        const trimesters = [...new Set(grades.map(grade => grade.trimester))].sort().map(trimester => {
           const trimester_grades = grades.filter(grade => grade.trimester === trimester)
 
           const cc = Math.max(...trimester_grades.map(grade => grade.grades.length))
@@ -207,7 +207,6 @@ program
             const average = (grade.average === null && grade.grades.length > 0) ? (grade.grades.reduce((a, b) => a + b, 0) / grade.grades.length) : grade.average
 
             return {
-              "rc_id": grade.rc_id,
               "Year": grade.year,
               "Trimester": `${grade.trimester_name} (${grade.trimester})`,
               "Teacher": `${grade.teacher_civility} ${grade.teacher_last_name} ${grade.teacher_first_name}`,
@@ -237,8 +236,10 @@ program
             'Average': Math.floor(average * 100) / 100,
           })
 
-          console.table(trimester_grades_formated)
+          return trimester_grades_formated
         })
+
+        display.multiple(trimesters)
       }
     } catch (e) {
       if (options.debug) {
@@ -348,14 +349,16 @@ program
 
         const days = [...new Set(agenda.map(activity => new Date(activity.start_date).toDateString()))]
 
-        days.forEach(day => {
-          const activities = agenda.filter(activity => new Date(activity.start_date).toDateString() === day).map(activity => {
-            const activity_start = new Date(activity.start_date)
-            const activity_end = new Date(activity.end_date)
+        const trimesters = days.map(day => {
+          return agenda.filter(activity => new Date(activity.start_date).toDateString() === day).map(activity => {
+            const activity_start = moment(activity.start_date)
+            const activity_end = moment(activity.end_date)
+
+            const mesure = moment('11:30', 'HH:mm').format('LT').length
 
             return {
-              'Day': activity_start.toDateString(),
-              'Schedule': `${activity_start.getHours().toString().padStart(2, '0')}:${activity_start.getMinutes().toString().padStart(2, '0')} -> ${activity_end.getHours().toString().padStart(2, '0')}:${activity_end.getMinutes().toString().padStart(2, '0')}`,
+              'Day': activity_start.format('ddd, LL'),
+              'Schedule': `${activity_start.format('LT').padStart(mesure, '0')} -> ${activity_end.format('LT').padStart(mesure, '0')}`,
               'Room(s)': (activity.rooms || []).reduce((str, room) => {
                 return `${str ? `${str} - ` : ''}${room.campus} ${room.name} (${room.floor})`
               }, ''),
@@ -363,9 +366,9 @@ program
               'Teacher': activity.teacher,
             }
           })
-
-          console.table(activities)
         })
+
+        display.multiple(trimesters)
       }
     } catch (e) {
       if (options.debug) {
@@ -397,7 +400,7 @@ program
       if (options.raw) {
         console.log(JSON.stringify(result))
       } else if (options.table) {
-        console.table(result)
+        display.table(result)
       } else {
         console.log(result)
       }
@@ -439,7 +442,7 @@ program
       } else {
         const { uid } = await api.request('GET', '/me/profile', config)
 
-        console.table(projects.map(project => {
+        display.table(projects.map(project => {
           const group = project.groups.find(group => {
             return !!(group.project_group_students || []).find(student => student.u_id === uid)
           })
@@ -447,9 +450,11 @@ program
           let group_infos = {}
 
           if (group) {
-            group_infos = {
-              'Group': `${group.group_name} (${group.project_group_id})`,
+            if (project.project_id == 5301) {
+              group_infos['Test'] = 5
             }
+
+            group_infos['Group'] = `${group.group_name} (${group.project_group_id})`
 
             if (group.date_presentation > 0) {
               const date = new Date(group.date_presentation)
@@ -548,11 +553,20 @@ program
             }
           }
 
-          console.table({
-            'ID': project.project_id,
-            'Name': project.name,
-            ...group_infos,
-          })
+          display.table([
+            {
+              'Name': colors.cyan('ID'),
+              'Value': project.project_id,
+            },
+            {
+              'Name': colors.cyan('Name'),
+              'Value': project.name,
+            },
+            ...Object.keys(group_infos).map(key => ({
+              'Name': colors.cyan(key),
+              'Value': group_infos[key],
+            })),
+          ], false)
         }
       } else if (action === 'join') {
         let group = project.groups.find(group => {
@@ -643,7 +657,7 @@ program
           }
         }
       } else if (action === 'groups') {
-        console.table(project.groups.map(group => ({
+        display.table(project.groups.map(group => ({
           id: group.project_group_id,
           name: group.group_name,
           ...(group.project_group_students || []).map(student => `${student.firstname} ${student.name}`).reduce((acc, v, i) => {
@@ -742,11 +756,20 @@ program
   .command('contribute')
   .description('show useful links')
   .action(() => {
-    console.table({
-      'Réseau GES (GHG Network)': 'http://www.reseau-ges.fr/',
-      'GitHub repository': 'https://github.com/quantumsheep/myges-cli',
-      'Issues': 'https://github.com/quantumsheep/myges-cli/issues',
-    })
+    display.table([
+      {
+        'Name': colors.cyan('Réseau GES (GHG Network)'),
+        'Value': 'http://www.reseau-ges.fr/',
+      },
+      {
+        'Name': colors.cyan('GitHub repository'),
+        'Value': 'https://github.com/quantumsheep/myges-cli',
+      },
+      {
+        'Name': colors.cyan('Issues'),
+        'Value': 'https://github.com/quantumsheep/myges-cli/issues',
+      },
+    ], false)
   })
 
 program.action(async () => program.help())
