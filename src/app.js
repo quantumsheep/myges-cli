@@ -767,7 +767,7 @@ program
     display.table([
       {
         'Name': colors.cyan('Réseau GES (GHG Network)'),
-        'Value': 'http://www.reseau-ges.fr/',
+        'Value': 'http://www.reseau-ges.fr',
       },
       {
         'Name': colors.cyan('GitHub repository'),
