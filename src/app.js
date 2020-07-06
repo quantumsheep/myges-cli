@@ -98,6 +98,8 @@ program
 
       if (options.raw) {
         console.log(JSON.stringify(absences))
+      } else if (!absences) {
+        console.log('Nothing to display.');
       } else {
         display.table(absences.map(absence => ({
           'Year': absence.year,
@@ -142,6 +144,8 @@ program
 
       if (options.raw) {
         console.log(JSON.stringify(courses))
+      } else if (!courses) {
+        console.log('Nothing to display.');
       } else {
         const trimesters = [...new Set(courses.map(course => course.trimester))].sort()
 
@@ -192,6 +196,8 @@ program
 
       if (options.raw) {
         console.log(JSON.stringify(grades))
+      } else if (!grades) {
+        console.log('Nothing to display.');
       } else {
         const trimesters = [...new Set(grades.map(grade => grade.trimester))].sort().map(trimester => {
           const trimester_grades = grades.filter(grade => grade.trimester === trimester)
@@ -439,6 +445,8 @@ program
 
       if (options.raw) {
         console.log(JSON.stringify(projects))
+      } else if (!projects) {
+        console.log('Nothing to display.');
       } else {
         const { uid } = await api.request('GET', '/me/profile', config)
 
