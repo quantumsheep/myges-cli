@@ -24,7 +24,7 @@
   "author": "Nathanael Demacon <nathanael.dmc@outlook.fr>",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "colors": "^1.4.0",
     "commander": "^4.1.1",
     "inquirer": "^7.3.0",
