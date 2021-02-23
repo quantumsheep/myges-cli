@@ -31,7 +31,7 @@ program
   .command('login')
   .option('-d, --debug', 'debug mode')
   .description('sign in to an account')
-  .action(async () => {
+  .action(async (options) => {
     try {
       /** @type {Config} */
       const config = await configurator.load() || {}
@@ -58,7 +58,7 @@ program
   .command('logout')
   .option('-d, --debug', 'debug mode')
   .description('remove the saved auth informations')
-  .action(async () => {
+  .action(async (options) => {
     try {
       await configurator.erase()
 
