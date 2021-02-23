@@ -15,25 +15,34 @@ export async function authenticate(username: string, password: string): Promise<
     /**
      * This will activate comreseaugesskolae:// protocol, thus throwing an exception
      */
-    const res = await axios.get('https://authentication.reseau-ges.fr/oauth/authorize?response_type=token&client_id=skolae-app', {
+    const res = await axios({
+      method: 'GET',
+      url: 'https://authentication.reseau-ges.fr/oauth/authorize?response_type=token&client_id=skolae-app',
       headers: {
         Authorization: `Basic ${credentials}`,
       },
+      maxRedirects: 0,
     });
 
     return null;
   } catch (e) {
-    if (!e.request?._options?.hash) {
+    if (!e.request?.res?.headers?.location) {
       throw new Error('Bad password');
     }
 
-    /** @type {string} */
-    const { hash } = e.request._options;
-    const res = hash.slice(1).split('&').map((v) => v.split('=')).reduce((o, v) => {
-      o[v[0]] = v[1];
-      return o;
-    }, {});
+    const { location }: Record<string, string> = e.request.res.headers;
 
-    return res;
+    const hash = location.slice(location.indexOf('#'));
+    const properties = hash.split('&')
+      .map(property => property.split('='))
+      .reduce<Record<string, string>>((acc, [name, value]) => ({ ...acc, [name]: value }), {});
+
+    return {
+      access_token: properties.access_token,
+      token_type: properties.token_type,
+      expires_in: properties.expires_in,
+      scope: properties.scope,
+      uid: properties.uid,
+    };
   }
 }
