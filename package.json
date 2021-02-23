@@ -8,7 +8,8 @@
     "start": "node --no-warnings .",
     "dev": "nodemon .",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts --fix"
+    "lint": "eslint src/**/*.ts --fix",
+    "prepare": "npm run build"
   },
   "bin": {
     "myges": "./dist/app.js"
