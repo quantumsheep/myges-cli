@@ -23,7 +23,7 @@ export async function authenticate(username: string, password: string): Promise<
 
     return null;
   } catch (e) {
-    if (!e.request._options || !e.request._options.hash) {
+    if (!e.request?._options?.hash) {
       throw new Error('Bad password');
     }
 

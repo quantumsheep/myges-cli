@@ -37,16 +37,13 @@ export async function prompt_credentials(): Promise<AccessToken & { username: st
     if (e.isTtyError) {
       throw new Error(`Prompt couldn't be rendered in the current environment: ${e.message}`);
     } else {
-      throw new Error(e.message);
+      throw e;
     }
   }
 }
 
-/**
- * @param {Config} config
- */
-export function save(config) {
-  return fs.writeFile(config_path, JSON.stringify(config));
+export async function save(config: Config) {
+  return await fs.writeFile(config_path, JSON.stringify(config));
 }
 
 function must_be_logged() {
@@ -54,9 +51,6 @@ function must_be_logged() {
   return process.exit(1);
 }
 
-/**
- * @returns {Promise<Config>}
- */
 export async function load(exit_if_not_logged = false) : Promise<Pick<Config, 'access_token' | 'token_type'>> {
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
@@ -99,6 +93,6 @@ export async function load(exit_if_not_logged = false) : Promise<Pick<Config, 'a
   }
 }
 
-export function erase() {
-  return fs.writeFile(config_path, JSON.stringify({}));
+export async function erase() {
+  return await fs.writeFile(config_path, JSON.stringify({}));
 }

@@ -34,16 +34,15 @@ program
   .description('sign in to an account')
   .action(async (options) => {
     try {
-      const config: Partial<Config> = await configurator.load() || {};
-
       const token = await configurator.prompt_credentials();
 
-      config.username = token.username;
-      config.token_type = token.token_type;
-      config.access_token = token.access_token;
-      config.expires = Date.now() + (parseInt(token.expires_in, 10) * 1000);
+      await configurator.save({
+        username: token.username,
+        token_type: token.token_type,
+        access_token: token.access_token,
+        expires: Date.now() + (parseInt(token.expires_in, 10) * 1000),
+      });
 
-      await configurator.save(config);
       console.log('Successfully logged in!');
     } catch (e) {
       if (options.debug) {
