@@ -32,7 +32,7 @@ export async function authenticate(username: string, password: string): Promise<
 
     const { location }: Record<string, string> = e.request.res.headers;
 
-    const hash = location.slice(location.indexOf('#'));
+    const hash = location.slice(location.indexOf('#') + 1);
     const properties = hash.split('&')
       .map(property => property.split('='))
       .reduce<Record<string, string>>((acc, [name, value]) => ({ ...acc, [name]: value }), {});
