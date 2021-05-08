@@ -279,7 +279,9 @@ program
       const now = moment();
 
       if (!week) {
-        const middle = now.clone().set('hours', 23);
+        const middle = now.clone()
+          .subtract(now.day(), 'day')
+          .set('hours', 23);
 
         if (options.interactive) {
           const to_range = (start: moment.Moment) => {
@@ -291,10 +293,10 @@ program
             return `${start_str} ${end_str}`;
           };
 
-          const before = [...Array(9).keys()].map((i) => to_range(middle.clone().add((i + 1) * 7, 'hours'))).reverse();
-          const after = [...Array(9).keys()].map((i) => to_range(middle.clone().subtract((i + 1) * 7, 'hours'))).reverse();
+          const before = [...Array(9).keys()].map((i) => to_range(middle.clone().add((i + 1) * 7, 'days'))).reverse();
+          const after = [...Array(9).keys()].map((i) => to_range(middle.clone().subtract((i + 1) * 7, 'days')));
 
-          const middle_range = to_range(middle);
+          const middle_range = to_range(middle.clone());
 
           const answers = await inquirer.prompt([
             {
