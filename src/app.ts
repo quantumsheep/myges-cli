@@ -345,7 +345,7 @@ program
           .set('hours', 23);
 
         start = selected.clone().subtract(selected.day(), 'days');
-        end = selected.clone().add(7, 'days');
+        end = start.clone().add(7, 'days');
       }
 
       if (start.isSame(end)) {
