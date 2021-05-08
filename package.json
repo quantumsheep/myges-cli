@@ -1,6 +1,6 @@
 {
   "name": "myges",
-  "version": "1.12.2",
+  "version": "1.12.3",
   "description": "",
   "keywords": [],
   "main": "dist/app.js",
