@@ -1,4 +1,4 @@
-name: Publish package
+name: Release Workflow
 
 on:
   release:
@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    name: Build and publish package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
