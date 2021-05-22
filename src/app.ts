@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import readline from 'readline';
 
 import commander from 'commander';

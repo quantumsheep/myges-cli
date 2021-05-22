@@ -31,8 +31,9 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: chmod +x ./dist/app.js
-      - run: ./dist/app.js
+      - run: npm run bundle
+      - run: chmod +x ./dist/bundle.js
+      - run: ./dist/bundle.js
 
   test-runtime-container:
     strategy:
@@ -54,5 +55,6 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: chmod +x ./dist/app.js
-      - run: ./dist/app.js
+      - run: npm run bundle
+      - run: chmod +x ./dist/bundle.js
+      - run: ./dist/bundle.js
