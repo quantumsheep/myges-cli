@@ -1,0 +1,58 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test-runtime:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        node:
+          - 12
+          - 14
+          - 15
+          - 16
+
+    runs-on: ${{ matrix.os }}
+
+    name: Test runtime for ${{ matrix.os }} using Node ${{ matrix.node }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: chmod +x ./dist/app.js
+      - run: ./dist/app.js
+
+  test-runtime-container:
+    strategy:
+      matrix:
+        image:
+          - node:12-alpine
+          - node:14-alpine
+          - node:15-alpine
+          - node:16-alpine
+
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+
+    name: Test runtime in container using ${{ matrix.image }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - run: npm ci
+      - run: npm run build
+      - run: chmod +x ./dist/app.js
+      - run: ./dist/app.js
