@@ -381,10 +381,17 @@ program
 
             const mesure = moment('11:30', 'HH:mm').format('LT').length;
 
+            let rooms = (activity.modality === 'Distanciel') ? 'Remote' : 'Unknown';
+
+            if (activity.rooms?.length > 0) {
+              const roomInfo = activity.rooms[0];
+              rooms = activity.rooms.map(room => `${roomInfo.campus} ${roomInfo.name} (${roomInfo.floor})`).join(' - ');
+            }
+
             return {
               Day: activity_start.format('ddd, LL'),
               Schedule: `${activity_start.format('LT').padStart(mesure, '0')} -> ${activity_end.format('LT').padStart(mesure, '0')}`,
-              'Room(s)': (activity.rooms || []).reduce((str, room) => `${str ? `${str} - ` : ''}${room.campus} ${room.name} (${room.floor})`, ''),
+              'Room(s)': rooms,
               Name: activity.name,
               Teacher: activity.teacher,
             };
