@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import inquirer from "inquirer";
 import moment from "moment";
+import { errorHandler, GlobalCommandOptions } from "../commands-base";
 import * as configurator from '../config';
 import * as display from '../display';
 import * as api from '../ges-api';
@@ -13,10 +14,10 @@ export function register(program: Command) {
     .option('-r, --raw', 'output the raw data')
     .option('-i, --interactive', 'interactive mode')
     .description('fetch agenda')
-    .action(action);
+    .action(errorHandler(action));
 }
 
-interface CommandOptions {
+interface CommandOptions extends GlobalCommandOptions {
   debug: boolean;
   raw: boolean;
   interactive: boolean;

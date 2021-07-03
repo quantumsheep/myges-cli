@@ -3,6 +3,7 @@ import * as configurator from '../config';
 import * as api from '../ges-api';
 import * as display from '../display';
 import { Method } from "axios";
+import { errorHandler, GlobalCommandOptions } from "../commands-base";
 
 export function register(program: Command) {
   program
@@ -12,10 +13,10 @@ export function register(program: Command) {
     .option('-t, --table', 'output data in a table')
     .option('-b, --body <value>', 'add a body (must be a JSON)', '{}')
     .description('make a request to the API')
-    .action(action);
+    .action(errorHandler(action));
 }
 
-interface CommandOptions {
+interface CommandOptions extends GlobalCommandOptions {
   debug: boolean;
   raw: boolean;
   table: boolean;

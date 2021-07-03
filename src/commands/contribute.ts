@@ -1,12 +1,13 @@
 import colors from 'colors';
 import { Command } from "commander";
+import { errorHandler } from '../commands-base';
 import * as display from '../display';
 
 export function register(program: Command) {
   program
     .command('contribute')
     .description('show useful links')
-    .action(action);
+    .action(errorHandler(action));
 }
 
 async function action() {

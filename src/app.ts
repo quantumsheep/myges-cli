@@ -1,24 +1,18 @@
-import commander from 'commander';
-import update_notifier from 'update-notifier';
+import updateNotifier from 'update-notifier';
 import * as commands from './commands';
+import * as commandsBase from './commands-base';
 
 const pkg = require('../package.json');
 
-const notifier = update_notifier({
+const notifier = updateNotifier({
   pkg,
   shouldNotifyInNpmScript: true,
 });
 
-notifier.notify({
-  isGlobal: true,
-});
+notifier.notify({ isGlobal: true });
 
-const program = new commander.Command();
-program.version(pkg.version);
-
+const program = commandsBase.init();
 commands.register(program);
-
-program.action(() => program.help());
 
 if (process.argv.length < 3) {
   program.help();

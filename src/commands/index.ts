@@ -6,7 +6,6 @@ import * as coursesCommand from './courses';
 import * as gradesCommand from './grades';
 import * as loginCommand from './login';
 import * as logoutCommand from './logout';
-import * as projectCommand from './project';
 import * as projectsCommand from './projects';
 import * as requestCommand from './request';
 
@@ -18,7 +17,6 @@ export function register(program: Command) {
   gradesCommand.register(program);
   loginCommand.register(program);
   logoutCommand.register(program);
-  projectCommand.register(program);
   projectsCommand.register(program);
   requestCommand.register(program);
 }

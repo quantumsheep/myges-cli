@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { errorHandler, GlobalCommandOptions } from "../commands-base";
 import * as configurator from '../config';
 
 export function register(program: Command) {
@@ -6,10 +7,10 @@ export function register(program: Command) {
     .command('login')
     .option('-d, --debug', 'debug mode')
     .description('sign in to an account')
-    .action(action);
+    .action(errorHandler(action));
 }
 
-interface CommandOptions {
+interface CommandOptions extends GlobalCommandOptions {
   debug: boolean;
 }
 
