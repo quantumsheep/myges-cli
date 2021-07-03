@@ -13,7 +13,6 @@ export function register(program: Command) {
 }
 
 interface CommandOptions extends GlobalCommandOptions {
-  group?: string;
   year?: string;
 }
 
