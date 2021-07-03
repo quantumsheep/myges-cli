@@ -10,7 +10,6 @@ import { AgendaItem } from "../interfaces/agenda.interface";
 export function register(program: Command) {
   program
     .command('agenda [week]')
-    .option('-d, --debug', 'debug mode')
     .option('-r, --raw', 'output the raw data')
     .option('-i, --interactive', 'interactive mode')
     .description('fetch agenda')

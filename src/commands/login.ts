@@ -5,7 +5,6 @@ import * as configurator from '../config';
 export function register(program: Command) {
   program
     .command('login')
-    .option('-d, --debug', 'debug mode')
     .description('sign in to an account')
     .action(errorHandler(action));
 }

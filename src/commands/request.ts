@@ -8,7 +8,6 @@ import { errorHandler, GlobalCommandOptions } from "../commands-base";
 export function register(program: Command) {
   program
     .command('request <method> <url>')
-    .option('-d, --debug', 'debug mode')
     .option('-r, --raw', 'output the raw data')
     .option('-t, --table', 'output data in a table')
     .option('-b, --body <value>', 'add a body (must be a JSON)', '{}')

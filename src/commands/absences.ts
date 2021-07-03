@@ -9,7 +9,6 @@ import * as api from '../ges-api';
 export function register(program: Command) {
   program
     .command('absences [year]')
-    .option('-d, --debug', 'debug mode')
     .option('-r, --raw', 'output the raw data')
     .description('list absences')
     .action(errorHandler(action));

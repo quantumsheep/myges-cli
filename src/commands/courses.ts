@@ -8,7 +8,6 @@ import * as api from '../ges-api';
 export function register(program: Command) {
   program
     .command('courses [year]')
-    .option('-d, --debug', 'debug mode')
     .option('-r, --raw', 'output the raw data')
     .description('list courses')
     .action(errorHandler(action));

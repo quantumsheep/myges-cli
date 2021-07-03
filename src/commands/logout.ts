@@ -5,7 +5,6 @@ import * as configurator from '../config';
 export function register(program: Command) {
   program
     .command('logout')
-    .option('-d, --debug', 'debug mode')
     .description('remove the saved auth informations')
     .action(errorHandler(action));
 }

@@ -8,7 +8,6 @@ import * as api from '../ges-api';
 export function register(program: Command) {
   program
     .command('grades [year]')
-    .option('-d, --debug', 'debug mode')
     .option('-r, --raw', 'output the raw data')
     .description('list grades')
     .action(errorHandler(action));
