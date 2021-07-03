@@ -17,17 +17,19 @@ Usage: myges [options] [command]
 
 Options:
   -V, --version                     output the version number
-  -h, --help                        output usage information
+  -d, --debug                       debug mode
+  -h, --help                        display help for command
 
 Commands:
-  login [options]                   sign in to an account
-  logout [options]                  remove the saved auth informations
   absences [options] [year]         list absences
+  agenda [options] [week]           fetch agenda
+  contribute                        show useful links
   courses [options] [year]          list courses
   grades [options] [year]           list grades
-  agenda [options] [week]           fetch agenda
+  login [options]                   sign in to an account
+  logout [options]                  remove the saved auth informations
+  projects                          manage projects
   request [options] <method> <url>  make a request to the API
-  contribute                        show useful links
 ```
 
 ## Agenda
