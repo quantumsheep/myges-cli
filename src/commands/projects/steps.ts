@@ -1,6 +1,5 @@
 import colors from 'colors';
 import { Command } from 'commander';
-import inquirer from 'inquirer';
 import moment from 'moment';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
