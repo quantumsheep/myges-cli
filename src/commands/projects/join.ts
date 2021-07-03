@@ -9,7 +9,7 @@ export function register(program: Command) {
   program
     .command('join [id]')
     .option('-g, --group', 'pre-select a group')
-    .option('-y, --year', 'pre-select a year')
+    .option('-y, --year <year>', 'pre-select a year')
     .action(errorHandler(action));
 }
 

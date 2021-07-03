@@ -13,7 +13,7 @@ export function register(program: Command) {
     .command('steps [id]')
     .option('-a, --all', 'All next steps')
     .option('-n, --next', 'All next steps')
-    .option('-y, --year', 'pre-select a year')
+    .option('-y, --year <year>', 'pre-select a year')
     .option('-r, --raw', 'output the raw data')
     .action(errorHandler(action));
 }

@@ -9,7 +9,7 @@ export function register(program: Command) {
   program
     .command('ls [year]')
     .option('-r, --raw', 'output the raw data')
-    .option('-y, --year', 'pre-select a year')
+    .option('-y, --year <year>', 'pre-select a year')
     .action(errorHandler(action));
 }
 

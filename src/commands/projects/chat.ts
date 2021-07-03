@@ -9,7 +9,7 @@ import { getProject } from './show';
 export function register(program: Command) {
   program
     .command('chat [id]')
-    .option('-y, --year', 'pre-select a year')
+    .option('-y, --year <year>', 'pre-select a year')
     .action(errorHandler(action));
 }
 
