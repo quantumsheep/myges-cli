@@ -5,6 +5,7 @@ import * as joinSubcommand from './join';
 import * as lsSubcommand from './ls';
 import * as quitSubcommand from './quit';
 import * as showSubcommand from './show';
+import * as stepsSubcommand from './steps';
 
 export function register(program: Command) {
   const command = program.command('projects').description('manage projects');
@@ -15,4 +16,5 @@ export function register(program: Command) {
   lsSubcommand.register(command);
   quitSubcommand.register(command);
   showSubcommand.register(command);
+  stepsSubcommand.register(command);
 }
