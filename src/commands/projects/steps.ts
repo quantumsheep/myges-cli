@@ -55,11 +55,10 @@ async function action(id: string, options: CommandOptions) {
     display.table(
       steps.map((step) => ({
         'Project ID': step.pro_id,
-        'Project Name': step.pro_name,
-        'Group ID': step.group_id,
-        Course: step.course_name,
-        'Limit Date': moment(step.psp_limit_date).format('LL'),
         Type: step.psp_type,
+        'Limit Date': moment(step.psp_limit_date).format('LL'),
+        'Project Name': step.pro_name,
+        Course: step.course_name,
       })),
     );
 
