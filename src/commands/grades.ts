@@ -1,6 +1,6 @@
-import { Command } from "commander";
-import inquirer from "inquirer";
-import { errorHandler, GlobalCommandOptions } from "../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as display from '../display';
 import * as api from '../ges-api';
@@ -42,51 +42,67 @@ async function action(year: string, options: CommandOptions) {
     } else if (!grades) {
       console.log('Nothing to display.');
     } else {
-      const trimesters = [...new Set(grades.map((grade) => grade.trimester))].sort().map((trimester) => {
-        const trimester_grades = grades.filter((grade) => grade.trimester === trimester);
+      const trimesters = [...new Set(grades.map((grade) => grade.trimester))]
+        .sort()
+        .map((trimester) => {
+          const trimester_grades = grades.filter(
+            (grade) => grade.trimester === trimester,
+          );
 
-        const cc = Math.max(...trimester_grades.map((grade) => grade.grades.length));
+          const cc = Math.max(
+            ...trimester_grades.map((grade) => grade.grades.length),
+          );
 
-        const ccs = trimester_grades.map((grade) => [...Array(cc).keys()].reduce((o, i) => {
-          o[`CC${i + 1}`] = grade.grades.length > i ? grade.grades[i] : null;
-          return o;
-        }, {}));
+          const ccs = trimester_grades.map((grade) =>
+            [...Array(cc).keys()].reduce((o, i) => {
+              o[`CC${i + 1}`] =
+                grade.grades.length > i ? grade.grades[i] : null;
+              return o;
+            }, {}),
+          );
 
-        const trimester_grades_formated = trimester_grades.map((grade, i) => {
-          const average = (grade.average === null && grade.grades.length > 0) ? (grade.grades.reduce((a, b) => a + b, 0) / grade.grades.length) : grade.average;
+          const trimester_grades_formated = trimester_grades.map((grade, i) => {
+            const average =
+              grade.average === null && grade.grades.length > 0
+                ? grade.grades.reduce((a, b) => a + b, 0) / grade.grades.length
+                : grade.average;
 
-          return {
-            Year: grade.year,
-            Trimester: `${grade.trimester_name} (${grade.trimester})`,
-            Teacher: `${grade.teacher_civility} ${grade.teacher_last_name} ${grade.teacher_first_name}`,
-            Course: grade.course,
-            'Coef. / ECTS': grade.coef || grade.ects,
-            ...ccs[i],
-            Exam: grade.exam,
-            Average: average !== null ? Math.floor(average * 100) / 100 : null,
-          };
+            return {
+              Year: grade.year,
+              Trimester: `${grade.trimester_name} (${grade.trimester})`,
+              Teacher: `${grade.teacher_civility} ${grade.teacher_last_name} ${grade.teacher_first_name}`,
+              Course: grade.course,
+              'Coef. / ECTS': grade.coef || grade.ects,
+              ...ccs[i],
+              Exam: grade.exam,
+              Average:
+                average !== null ? Math.floor(average * 100) / 100 : null,
+            };
+          });
+
+          let count = 0;
+          const averages = trimester_grades_formated
+            .map((grade) => {
+              if (grade.Average !== null) {
+                const coef = parseFloat(grade['Coef. / ECTS']) || 1;
+
+                count += coef;
+                return grade.Average * coef;
+              }
+
+              return null;
+            })
+            .filter((average) => average !== null);
+
+          const average =
+            count > 0 ? averages.reduce((a, b) => a + b, 0) / count || 0 : 0;
+          trimester_grades_formated.push({
+            Course: 'GLOBAL AVERAGE',
+            Average: Math.floor(average * 100) / 100,
+          });
+
+          return trimester_grades_formated;
         });
-
-        let count = 0;
-        const averages = trimester_grades_formated.map((grade) => {
-          if (grade.Average !== null) {
-            const coef = parseFloat(grade['Coef. / ECTS']) || 1;
-
-            count += coef;
-            return grade.Average * coef;
-          }
-
-          return null;
-        }).filter((average) => average !== null);
-
-        const average = count > 0 ? ((averages.reduce((a, b) => a + b, 0) / count) || 0) : 0;
-        trimester_grades_formated.push({
-          Course: 'GLOBAL AVERAGE',
-          Average: Math.floor(average * 100) / 100,
-        });
-
-        return trimester_grades_formated;
-      });
 
       display.multiple(trimesters);
     }

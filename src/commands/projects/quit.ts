@@ -1,9 +1,9 @@
-import { Command } from "commander";
-import inquirer from "inquirer";
-import { errorHandler, GlobalCommandOptions } from "../../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as api from '../../ges-api';
-import { getProject } from "./show";
+import { getProject } from './show';
 
 export function register(program: Command) {
   program
@@ -23,7 +23,12 @@ async function action(id: string, options: CommandOptions) {
 
   const { uid } = await api.request('GET', '/me/profile', config);
 
-  const group = project.groups.find((group) => !!(group.project_group_students || []).find((student) => student.u_id === uid));
+  const group = project.groups.find(
+    (group) =>
+      !!(group.project_group_students || []).find(
+        (student) => student.u_id === uid,
+      ),
+  );
 
   if (!group) {
     return console.error('You are not actually in a group.');
@@ -40,7 +45,11 @@ async function action(id: string, options: CommandOptions) {
 
   if (confirm) {
     try {
-      await api.request('DELETE', `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`, config);
+      await api.request(
+        'DELETE',
+        `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`,
+        config,
+      );
 
       console.log('Successfully quitted the group!');
     } catch (e) {

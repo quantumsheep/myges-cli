@@ -1,11 +1,11 @@
-import { Command } from "commander";
-import inquirer from "inquirer";
-import moment from "moment";
-import { errorHandler, GlobalCommandOptions } from "../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import moment from 'moment';
+import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as display from '../display';
 import * as api from '../ges-api';
-import { AgendaItem } from "../interfaces/agenda.interface";
+import { AgendaItem } from '../interfaces/agenda.interface';
 
 export function register(program: Command) {
   program
@@ -29,9 +29,7 @@ async function action(week: string, options: CommandOptions) {
     const now = moment();
 
     if (!week) {
-      const middle = now.clone()
-        .subtract(now.day(), 'day')
-        .set('hours', 23);
+      const middle = now.clone().subtract(now.day(), 'day').set('hours', 23);
 
       if (options.interactive) {
         const to_range = (start: moment.Moment) => {
@@ -43,8 +41,12 @@ async function action(week: string, options: CommandOptions) {
           return `${start_str} ${end_str}`;
         };
 
-        const before = [...Array(9).keys()].map((i) => to_range(middle.clone().add((i + 1) * 7, 'days'))).reverse();
-        const after = [...Array(9).keys()].map((i) => to_range(middle.clone().subtract((i + 1) * 7, 'days')));
+        const before = [...Array(9).keys()]
+          .map((i) => to_range(middle.clone().add((i + 1) * 7, 'days')))
+          .reverse();
+        const after = [...Array(9).keys()].map((i) =>
+          to_range(middle.clone().subtract((i + 1) * 7, 'days')),
+        );
 
         const middle_range = to_range(middle.clone());
 
@@ -53,11 +55,7 @@ async function action(week: string, options: CommandOptions) {
             message: 'Choose a week',
             name: 'week',
             type: 'list',
-            choices: [
-              ...before,
-              middle_range,
-              ...after,
-            ],
+            choices: [...before, middle_range, ...after],
             default: middle_range,
           },
         ]);
@@ -88,7 +86,9 @@ async function action(week: string, options: CommandOptions) {
         week = now.format('DD-MM-YYYY');
       }
 
-      const [date, month = now.month() + 1, year = now.year()] = week.split(/[\-\+]/g).map((v) => parseInt(v, 10));
+      const [date, month = now.month() + 1, year = now.year()] = week
+        .split(/[\-\+]/g)
+        .map((v) => parseInt(v, 10));
 
       const selected = moment()
         .set('year', year)
@@ -103,10 +103,18 @@ async function action(week: string, options: CommandOptions) {
     if (start.isSame(end)) {
       console.log(`Loading agenda for ${start.format('DD-MM-YYYY')}...`);
     } else {
-      console.log(`Loading agenda from ${start.format('DD-MM-YYYY')} to ${end.format('DD-MM-YYYY')}...`);
+      console.log(
+        `Loading agenda from ${start.format('DD-MM-YYYY')} to ${end.format(
+          'DD-MM-YYYY',
+        )}...`,
+      );
     }
 
-    const agenda = await api.request<AgendaItem[]>('GET', `/me/agenda?start=${start.valueOf()}&end=${end.valueOf()}`, config);
+    const agenda = await api.request<AgendaItem[]>(
+      'GET',
+      `/me/agenda?start=${start.valueOf()}&end=${end.valueOf()}`,
+      config,
+    );
 
     if (options.raw) {
       console.log(JSON.stringify(agenda));
@@ -118,13 +126,16 @@ async function action(week: string, options: CommandOptions) {
       const days = agenda
         .map((activity) => moment(activity.start_date))
         .sort((a, b) => a.diff(b))
-        .map(day => day.toDate().toDateString());
+        .map((day) => day.toDate().toDateString());
 
       const unique_days = [...new Set(days)];
 
       const trimesters = unique_days.map((day) => {
         const day_activities = agenda
-          .filter((activity) => moment(activity.start_date).toDate().toDateString() === day)
+          .filter(
+            (activity) =>
+              moment(activity.start_date).toDate().toDateString() === day,
+          )
           .sort((a, b) => a.start_date - b.start_date);
 
         return day_activities.map((activity) => {
@@ -133,16 +144,24 @@ async function action(week: string, options: CommandOptions) {
 
           const mesure = moment('11:30', 'HH:mm').format('LT').length;
 
-          let rooms = (activity.modality === 'Distanciel') ? 'Remote' : 'Unknown';
+          let rooms = activity.modality === 'Distanciel' ? 'Remote' : 'Unknown';
 
           if (activity.rooms?.length > 0) {
             const roomInfo = activity.rooms[0];
-            rooms = activity.rooms.map(room => `${roomInfo.campus} ${roomInfo.name} (${roomInfo.floor})`).join(' - ');
+            rooms = activity.rooms
+              .map(
+                () => `${roomInfo.campus} ${roomInfo.name} (${roomInfo.floor})`,
+              )
+              .join(' - ');
           }
 
           return {
             Day: activity_start.format('ddd, LL'),
-            Schedule: `${activity_start.format('LT').padStart(mesure, '0')} -> ${activity_end.format('LT').padStart(mesure, '0')}`,
+            Schedule: `${activity_start
+              .format('LT')
+              .padStart(mesure, '0')} -> ${activity_end
+              .format('LT')
+              .padStart(mesure, '0')}`,
             'Room(s)': rooms,
             Name: activity.name,
             Teacher: activity.teacher,

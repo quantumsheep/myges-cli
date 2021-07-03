@@ -1,7 +1,7 @@
-import { Command } from "commander";
-import inquirer from "inquirer";
-import moment from "moment";
-import { errorHandler, GlobalCommandOptions } from "../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import moment from 'moment';
+import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as display from '../display';
 import * as api from '../ges-api';
@@ -44,13 +44,15 @@ async function action(year: string, options: CommandOptions) {
     } else if (!absences) {
       console.log('Nothing to display.');
     } else {
-      display.table(absences.map((absence) => ({
-        Year: absence.year,
-        Date: moment(absence.date).format('DD/MM/YYYY, HH:mm'),
-        'Course name': absence.course_name,
-        Justified: absence.justified,
-        Trimester: absence.trimester_name,
-      })));
+      display.table(
+        absences.map((absence) => ({
+          Year: absence.year,
+          Date: moment(absence.date).format('DD/MM/YYYY, HH:mm'),
+          'Course name': absence.course_name,
+          Justified: absence.justified,
+          Trimester: absence.trimester_name,
+        })),
+      );
     }
   } catch (e) {
     if (options.debug) {

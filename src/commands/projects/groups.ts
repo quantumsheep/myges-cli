@@ -1,8 +1,8 @@
-import { Command } from "commander";
-import { errorHandler, GlobalCommandOptions } from "../../commands-base";
+import { Command } from 'commander';
+import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as display from '../../display';
-import { getProject } from "./show";
+import { getProject } from './show';
 
 export function register(program: Command) {
   program
@@ -19,12 +19,16 @@ interface CommandOptions extends GlobalCommandOptions {
 async function action(id: string, options: CommandOptions) {
   const project = await getProject(id, options);
 
-  display.table(project.groups.map((group) => ({
-    id: group.project_group_id,
-    name: group.group_name,
-    ...(group.project_group_students || []).map((student) => `${student.firstname} ${student.name}`).reduce((acc, v, i) => {
-      acc[`Student ${i + 1}`] = v;
-      return acc;
-    }, {}),
-  })));
+  display.table(
+    project.groups.map((group) => ({
+      id: group.project_group_id,
+      name: group.group_name,
+      ...(group.project_group_students || [])
+        .map((student) => `${student.firstname} ${student.name}`)
+        .reduce((acc, v, i) => {
+          acc[`Student ${i + 1}`] = v;
+          return acc;
+        }, {}),
+    })),
+  );
 }

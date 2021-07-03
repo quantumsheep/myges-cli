@@ -1,5 +1,5 @@
 import colors from 'colors';
-import { Command } from "commander";
+import { Command } from 'commander';
 import { errorHandler } from '../commands-base';
 import * as display from '../display';
 
@@ -11,18 +11,21 @@ export function register(program: Command) {
 }
 
 async function action() {
-  display.table([
-    {
-      Name: colors.cyan('Réseau GES (GHG Network)'),
-      Value: 'http://www.reseau-ges.fr',
-    },
-    {
-      Name: colors.cyan('GitHub repository'),
-      Value: 'https://github.com/quantumsheep/myges-cli',
-    },
-    {
-      Name: colors.cyan('Issues'),
-      Value: 'https://github.com/quantumsheep/myges-cli/issues',
-    },
-  ], false);
+  display.table(
+    [
+      {
+        Name: colors.cyan('Réseau GES (GHG Network)'),
+        Value: 'http://www.reseau-ges.fr',
+      },
+      {
+        Name: colors.cyan('GitHub repository'),
+        Value: 'https://github.com/quantumsheep/myges-cli',
+      },
+      {
+        Name: colors.cyan('Issues'),
+        Value: 'https://github.com/quantumsheep/myges-cli/issues',
+      },
+    ],
+    false,
+  );
 }

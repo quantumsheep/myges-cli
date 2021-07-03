@@ -1,7 +1,7 @@
 import colors from 'colors';
-import { Command } from "commander";
-import inquirer from "inquirer";
-import { errorHandler, GlobalCommandOptions } from "../../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as display from '../../display';
 import * as api from '../../ges-api';
@@ -28,8 +28,12 @@ async function action(id: string, options: CommandOptions) {
   } else {
     const { uid } = await api.request('GET', '/me/profile', config);
 
-    const group = project.groups
-      .find((group) => !!(group.project_group_students || []).find((student) => student.u_id === uid));
+    const group = project.groups.find(
+      (group) =>
+        !!(group.project_group_students || []).find(
+          (student) => student.u_id === uid,
+        ),
+    );
 
     let group_infos = {};
 
@@ -41,28 +45,34 @@ async function action(id: string, options: CommandOptions) {
       if (group.date_presentation > 0) {
         const date = new Date(group.date_presentation);
 
-        group_infos['Presentation Date'] = `${date.toDateString()} at ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        group_infos['Presentation Date'] = `${date.toDateString()} at ${date
+          .getHours()
+          .toString()
+          .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
       }
     }
 
-    display.table([
-      {
-        Name: colors.cyan('ID'),
-        Value: project.project_id,
-      },
-      {
-        Name: colors.cyan('Name'),
-        Value: project.name,
-      },
-      ...Object.keys(group_infos).map((key) => ({
-        Name: colors.cyan(key),
-        Value: group_infos[key],
-      })),
-    ], false);
+    display.table(
+      [
+        {
+          Name: colors.cyan('ID'),
+          Value: project.project_id,
+        },
+        {
+          Name: colors.cyan('Name'),
+          Value: project.name,
+        },
+        ...Object.keys(group_infos).map((key) => ({
+          Name: colors.cyan(key),
+          Value: group_infos[key],
+        })),
+      ],
+      false,
+    );
   }
 }
 
-export async function getProject(id?: string, options?: { year?: string; }) {
+export async function getProject(id?: string, options?: { year?: string }) {
   const config = await configurator.load(true);
 
   let project = null;
@@ -81,7 +91,11 @@ export async function getProject(id?: string, options?: { year?: string; }) {
       options.year = answers.year;
     }
 
-    const projects = await api.request('GET', `/me/${options.year}/projects`, config);
+    const projects = await api.request(
+      'GET',
+      `/me/${options.year}/projects`,
+      config,
+    );
 
     if (!projects) {
       throw new Error(`No projects found for year ${options.year}.`);

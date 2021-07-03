@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command } from 'commander';
 import * as absencesCommand from './absences';
 import * as agendaCommand from './agenda';
 import * as contributeCommand from './contribute';

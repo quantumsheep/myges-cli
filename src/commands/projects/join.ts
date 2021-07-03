@@ -1,9 +1,9 @@
-import { Command } from "commander";
-import inquirer from "inquirer";
-import { errorHandler, GlobalCommandOptions } from "../../commands-base";
+import { Command } from 'commander';
+import inquirer from 'inquirer';
+import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as api from '../../ges-api';
-import { getProject } from "./show";
+import { getProject } from './show';
 
 export function register(program: Command) {
   program
@@ -24,10 +24,17 @@ async function action(id: string, options: CommandOptions) {
 
   const { uid } = await api.request('GET', '/me/profile', config);
 
-  let group = project.groups.find((group) => !!(group.project_group_students || []).find((student) => student.u_id === uid));
+  let group = project.groups.find(
+    (group) =>
+      !!(group.project_group_students || []).find(
+        (student) => student.u_id === uid,
+      ),
+  );
 
   if (group) {
-    return console.error(`You already are in a group for this project (${group.group_name}).`);
+    return console.error(
+      `You already are in a group for this project (${group.group_name}).`,
+    );
   }
 
   if (!options.group) {
@@ -37,10 +44,14 @@ async function action(id: string, options: CommandOptions) {
         name: 'group',
         type: 'list',
         choices: project.groups.map((group) => {
-          const students = (group.project_group_students || []).map((student) => `${student.firstname} ${student.name}`);
+          const students = (group.project_group_students || []).map(
+            (student) => `${student.firstname} ${student.name}`,
+          );
 
           return {
-            name: group.group_name + (students.length > 0 ? `(${students.join(', ')})` : ''),
+            name:
+              group.group_name +
+              (students.length > 0 ? `(${students.join(', ')})` : ''),
             value: group.project_group_id,
           };
         }),
@@ -55,7 +66,9 @@ async function action(id: string, options: CommandOptions) {
     return console.error('Incorrect group number.');
   }
 
-  const groups = project.groups.sort((a, b) => a.project_group_id - b.project_group_id);
+  const groups = project.groups.sort(
+    (a, b) => a.project_group_id - b.project_group_id,
+  );
 
   if (numberValue > groups.length) {
     group = groups.find((group) => group.project_group_id == numberValue);
@@ -68,7 +81,11 @@ async function action(id: string, options: CommandOptions) {
   }
 
   try {
-    await api.request('POST', `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`, config);
+    await api.request(
+      'POST',
+      `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`,
+      config,
+    );
 
     console.log('Successfully joined the group!');
   } catch (e) {

@@ -1,9 +1,9 @@
-import { Command } from "commander";
+import { Command } from 'commander';
 import * as configurator from '../config';
 import * as api from '../ges-api';
 import * as display from '../display';
-import { Method } from "axios";
-import { errorHandler, GlobalCommandOptions } from "../commands-base";
+import { Method } from 'axios';
+import { errorHandler, GlobalCommandOptions } from '../commands-base';
 
 export function register(program: Command) {
   program

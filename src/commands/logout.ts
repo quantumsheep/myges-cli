@@ -1,5 +1,5 @@
-import { Command } from "commander";
-import { errorHandler, GlobalCommandOptions } from "../commands-base";
+import { Command } from 'commander';
+import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 
 export function register(program: Command) {
