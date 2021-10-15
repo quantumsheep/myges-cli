@@ -10,7 +10,7 @@ export async function request<T = any>(
   const { headers, ...others } = request_config;
 
   const { data } = await axios.request<{ result: T }>({
-    url: `https://services.reseau-ges.fr${url}`,
+    url: `https://api.kordis.fr${url}`,
     method,
     headers: {
       ...headers,

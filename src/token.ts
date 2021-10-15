@@ -17,7 +17,7 @@ export async function authenticate(username: string, password: string): Promise<
      */
     const res = await axios({
       method: 'GET',
-      url: 'https://authentication.reseau-ges.fr/oauth/authorize?response_type=token&client_id=skolae-app',
+      url: 'https://authentication.kordis.fr/oauth/authorize?response_type=token&client_id=skolae-app',
       headers: {
         Authorization: `Basic ${credentials}`,
       },
