@@ -51,7 +51,7 @@ async function action(id: string, options: CommandOptions) {
           return {
             name:
               group.group_name +
-              (students.length > 0 ? `(${students.join(', ')})` : ''),
+              (students.length > 0 ? ` (${students.join(', ')})` : ''),
             value: group.project_group_id,
           };
         }),
