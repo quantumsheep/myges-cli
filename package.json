@@ -35,6 +35,7 @@
     "colors": "^1.4.0",
     "commander": "^8.0.0",
     "date-fns": "^2.25.0",
+    "googleapis": "^89.0.0",
     "inquirer": "^8.1.1",
     "moment": "^2.29.1",
     "update-notifier": "^5.1.0"
