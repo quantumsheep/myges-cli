@@ -85,7 +85,7 @@ const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
           } else {
             callback();
           }
-        }, 10);
+        }, 100);
       },
     );
   });
@@ -132,7 +132,7 @@ const deleteEvents = (
             } else {
               callback();
             }
-          }, 10);
+          }, 100);
         },
       );
     });

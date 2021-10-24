@@ -89,12 +89,14 @@ async function action(days: string, options: CommandOptions) {
     console.log('Removing previous events on calendar in given date range...');
     removeEvents(start, end);
     console.log(
-      'Waiting around 20sec before add events to avoid rate limit of requests',
+      `Waiting around ${
+        Number.parseInt(days) / 2
+      }sec before add events to avoid rate limit of requests`,
     );
     setTimeout(() => {
       console.log('Adding new events on calendar in given date range...');
       pushToCalendar(agenda);
-    }, 20000);
+    }, (1000 * Number.parseInt(days)) / 2);
   } catch (e) {
     if (options.debug) {
       console.error(e);
