@@ -105,3 +105,9 @@ dist
 
 # Config file
 /config.json
+
+.idea/
+
+credentials.json
+
+token.json
