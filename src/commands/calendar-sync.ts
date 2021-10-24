@@ -5,8 +5,8 @@ import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as api from '../ges-api';
 import { AgendaItem } from '../interfaces/agenda.interface';
+import { pushToCalendar, removeEvents } from '../google-calendar';
 import { fr } from 'date-fns/locale';
-import { googleRead } from '../google-calendar';
 
 export function register(program: Command) {
   program
@@ -59,7 +59,13 @@ async function action(days: string, options: CommandOptions) {
       return;
     }
 
-    agenda = agenda.sort((a, b) => a.start_date - b.start_date);
+    agenda = agenda
+      .sort((a, b) => a.start_date - b.start_date)
+      .filter(
+        (item, index, agenda) =>
+          index === 0 ||
+          item.reservation_id != agenda[index - 1].reservation_id,
+      );
 
     for (const agendaItem of agenda) {
       const start = new Date(agendaItem.start_date);
@@ -80,7 +86,15 @@ async function action(days: string, options: CommandOptions) {
         )}`,
       );
     }
-    googleRead();
+    console.log('Removing previous events on calendar in given date range...');
+    removeEvents(start, end);
+    console.log(
+      'Waiting around 20sec before add events to avoid rate limit of requests',
+    );
+    setTimeout(() => {
+      console.log('Adding new events on calendar in given date range...');
+      pushToCalendar(agenda);
+    }, 20000);
   } catch (e) {
     if (options.debug) {
       console.error(e);
