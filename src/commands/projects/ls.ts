@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as display from '../../display';
-import * as api from '../../ges-api';
+import { GesAPI } from '../../ges-api';
 
 export function register(program: Command) {
   program
@@ -20,6 +20,7 @@ interface CommandOptions extends GlobalCommandOptions {
 
 async function action(year: string, options: CommandOptions) {
   const config = await configurator.load(true);
+  const api = new GesAPI(config);
 
   if (!year) {
     const answers = await inquirer.prompt([
@@ -27,21 +28,21 @@ async function action(year: string, options: CommandOptions) {
         message: 'Choose a year',
         name: 'year',
         type: 'list',
-        choices: await api.get_years(config),
+        choices: await api.getYears(),
       },
     ]);
 
     year = answers.year;
   }
 
-  const projects = await api.request('GET', `/me/${year}/projects`, config);
+  const projects = await api.getProjects(year);
 
   if (options.raw) {
     console.log(JSON.stringify(projects));
   } else if (!projects) {
     console.log('Nothing to display.');
   } else {
-    const { uid } = await api.request('GET', '/me/profile', config);
+    const { uid } = await api.getProfile();
 
     display.table(
       projects.map((project) => {

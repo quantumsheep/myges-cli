@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import readline from 'readline';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
-import * as api from '../../ges-api';
+import { GesAPI } from '../../ges-api';
 import { getProject } from './show';
 
 export function register(program: Command) {
@@ -20,9 +20,11 @@ interface CommandOptions extends GlobalCommandOptions {
 
 async function action(id: string, options: CommandOptions) {
   const config = await configurator.load(true);
+  const api = new GesAPI(config);
+
   const project = await getProject(id, options);
 
-  const { uid } = await api.request('GET', '/me/profile', config);
+  const { uid } = await api.getProfile();
 
   const group = project.groups.find(
     (group) =>
@@ -40,11 +42,7 @@ async function action(id: string, options: CommandOptions) {
     process.exit(0);
   });
 
-  const messages = await api.request(
-    'GET',
-    `/me/projectGroups/${group.project_group_id}/messages`,
-    config,
-  );
+  const messages = await api.getProjectGroupMessages(group.project_group_id);
 
   function display_message(message) {
     const date = new Date(message.date);
@@ -81,11 +79,7 @@ async function action(id: string, options: CommandOptions) {
     process.stdout.clearLine(0);
     process.stdout.cursorTo(0);
 
-    const data = await api.request(
-      'GET',
-      `/me/projectGroups/${group.project_group_id}/messages`,
-      config,
-    );
+    const data = await api.getProjectGroupMessages(group.project_group_id);
     const new_messages = data.slice(messages.length);
 
     for (const message of new_messages) {
@@ -99,18 +93,7 @@ async function action(id: string, options: CommandOptions) {
 
   rl.on('line', async (message) => {
     try {
-      const messages = await api.request(
-        'POST',
-        `/me/projectGroups/${group.project_group_id}/messages`,
-        config,
-        {
-          data: {
-            projectGroupId: group.project_group_id,
-            message,
-          },
-        },
-      );
-
+      await api.sendProjectGroupMessage(group.project_group_id, message);
       await update_messages();
     } catch (e) {
       if (options.debug) {

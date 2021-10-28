@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import { homedir } from 'os';
 
 import * as token from './token';
-import { AccessToken } from './token';
+import { AccessToken } from './ges-api';
 
 const config_path = path.resolve(homedir(), '.myges');
 
@@ -15,7 +15,9 @@ export interface Config {
   expires: number;
 }
 
-export async function prompt_credentials(): Promise<AccessToken & { username: string }> {
+export async function prompt_credentials(): Promise<
+  AccessToken & { username: string }
+> {
   try {
     const { username, password } = await inquirer.prompt([
       {
@@ -31,11 +33,13 @@ export async function prompt_credentials(): Promise<AccessToken & { username: st
 
     return {
       username,
-      ...await token.authenticate(username, password),
+      ...(await token.authenticate(username, password)),
     };
   } catch (e) {
     if (e.isTtyError) {
-      throw new Error(`Prompt couldn't be rendered in the current environment: ${e.message}`);
+      throw new Error(
+        `Prompt couldn't be rendered in the current environment: ${e.message}`,
+      );
     } else {
       throw e;
     }
@@ -47,16 +51,26 @@ export async function save(config: Config) {
 }
 
 function must_be_logged() {
-  console.error('You must be logged in before using that command. (myges login)');
+  console.error(
+    'You must be logged in before using that command. (myges login)',
+  );
   return process.exit(1);
 }
 
-export async function load(exit_if_not_logged = false) : Promise<Pick<Config, 'access_token' | 'token_type'>> {
+export async function load(
+  exit_if_not_logged = false,
+): Promise<Pick<Config, 'access_token' | 'token_type'>> {
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
     const parsed: Config = JSON.parse(config);
 
-    if (exit_if_not_logged && (!parsed.username || !parsed.access_token || !parsed.token_type || !parsed.expires)) {
+    if (
+      exit_if_not_logged &&
+      (!parsed.username ||
+        !parsed.access_token ||
+        !parsed.token_type ||
+        !parsed.expires)
+    ) {
       return must_be_logged();
     }
 
@@ -72,7 +86,7 @@ export async function load(exit_if_not_logged = false) : Promise<Pick<Config, 'a
       const info = await token.authenticate(parsed.username, password);
       parsed.access_token = info.access_token;
       parsed.token_type = info.token_type;
-      parsed.expires = Date.now() + (parseInt(info.expires_in, 10) * 1000);
+      parsed.expires = Date.now() + parseInt(info.expires_in, 10) * 1000;
 
       await save(parsed);
     }
