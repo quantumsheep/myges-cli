@@ -10,13 +10,13 @@
     "build": "tsc",
     "bundle": "rollup -c",
     "lint": "eslint src/**/*.ts --fix",
-    "prepare": "npm run build && npm run bundle"
+    "prepare": "npm run build"
   },
   "files": [
-    "dist/bundle.js"
+    "dist"
   ],
   "bin": {
-    "myges": "dist/bundle.js"
+    "myges": "dist/cli.js"
   },
   "contributors": [
     {
