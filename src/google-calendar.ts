@@ -8,6 +8,7 @@ import async from 'async';
 import Calendar = calendar_v3.Calendar;
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
+import { campusLocations } from './campus-location';
 
 export const readEvents = (startTime: Date, endTime: Date) => {
   fs.readFile('credentials.json', (err, data) => {
@@ -15,7 +16,7 @@ export const readEvents = (startTime: Date, endTime: Date) => {
       return console.log('Error loading client secret file:', err);
     }
     const googleClient = getClient(JSON.parse(data.toString()));
-    listEvents(googleClient, startTime, endTime, displayEvents);
+    retrieveEvents(googleClient, startTime, endTime, displayEvents);
   });
 };
 
@@ -25,7 +26,7 @@ export const removeEvents = (startTime: Date, endTime: Date) => {
       return console.log('Error loading client secret file:', err);
     }
     const googleClient = getClient(JSON.parse(data.toString()));
-    listEvents(googleClient, startTime, endTime, deleteEvents);
+    retrieveEvents(googleClient, startTime, endTime, deleteEvents);
   });
 };
 
@@ -41,7 +42,7 @@ export const pushToCalendar = (events: AgendaItem[]) => {
   });
 };
 
-const listEvents = (
+const retrieveEvents = (
   auth: OAuth2Client,
   startTime: Date,
   endTime: Date,
@@ -70,7 +71,7 @@ const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
     auth,
     http2: true,
   });
-  async.eachSeries(events, (event, callback) => {
+  async.eachSeries(events, (event: Schema$Event, callback) => {
     calendar.events.insert(
       {
         calendarId: process.env.CALENDAR_ID,
@@ -91,11 +92,7 @@ const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
   });
 };
 
-const displayEvents = (
-  err: Error,
-  res: { data: Schema$Events },
-  calendar: Calendar,
-) => {
+const displayEvents = (err: Error, res: { data: Schema$Events }) => {
   if (err) return console.log('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
@@ -114,7 +111,7 @@ const deleteEvents = (
   res: { data: Schema$Events },
   calendar: Calendar,
 ) => {
-  if (err) return console.log('The API returned an error: ' + err);
+  if (err) return console.error('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
     async.eachSeries(events, (event, callback) => {
@@ -141,25 +138,45 @@ const deleteEvents = (
   }
 };
 
+const getEventDescription = (agendaItem: AgendaItem) => {
+  let description = '';
+  if (agendaItem.teacher && agendaItem.teacher.length > 0) {
+    description += `<span>Intervenant : ${agendaItem.teacher} </span><br>`;
+  }
+  if (agendaItem.rooms && agendaItem.rooms.length > 0) {
+    description += `<span>Salle(s) :<ul>${agendaItem.rooms
+      .map((room) => `<li>${room.campus} - ${room.name}</li>`)
+      .join('')}</ul></span>`;
+  }
+  return description;
+};
+
+const getEventColorId = (agendaItem: AgendaItem) => {
+  if (!agendaItem.rooms || agendaItem.rooms.length == 0) {
+    return '11';
+  }
+  if (agendaItem.rooms[0].campus === 'NATION1') {
+    return undefined;
+  }
+  if (agendaItem.rooms[0].campus === 'NATION2') {
+    return '2';
+  }
+  return '5';
+};
+
+const getEventLocation = (agendaItem: AgendaItem) => {
+  if (!agendaItem.rooms || agendaItem.rooms.length === 0) {
+    return undefined;
+  }
+  return campusLocations.get(agendaItem.rooms[0].campus);
+};
+
 const createEvent = (agendaItem: AgendaItem): Schema$Event => {
   const event: Schema$Event = {
     summary: agendaItem.name,
-    description: `${
-      agendaItem.teacher && agendaItem.teacher.length > 0
-        ? `<span>Intervenant : ${agendaItem.teacher} </span><br>`
-        : ''
-    }${
-      agendaItem.rooms && agendaItem.rooms.length > 0
-        ? `<span>Salle(s) :<ul>${agendaItem.rooms
-            .map((room) => `<li>${room.campus} - ${room.name}</li>`)
-            .join('')}</ul></span>`
-        : ''
-    }`,
-    colorId: agendaItem.rooms && agendaItem.rooms.length > 0 ? undefined : '11',
-    location:
-      agendaItem.rooms && agendaItem.rooms.length > 0
-        ? `${agendaItem.rooms[0].latitude},${agendaItem.rooms[0].longitude}`
-        : undefined,
+    description: getEventDescription(agendaItem),
+    colorId: getEventColorId(agendaItem),
+    location: getEventLocation(agendaItem),
     start: {
       dateTime: formatRFC3339(new Date(agendaItem.start_date)),
       timeZone: 'Europe/Paris',
