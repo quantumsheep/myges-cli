@@ -2,6 +2,7 @@ import updateNotifier from 'update-notifier';
 import * as commands from './commands';
 import * as commandsBase from './commands-base';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('../package.json');
 
 const notifier = updateNotifier({
