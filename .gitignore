@@ -105,3 +105,6 @@ dist
 
 # Config file
 /config.json
+
+# macOS metadata directory
+.DS_Store
