@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command } from 'commander';
 
 const pkg = require('../package.json');
 
@@ -19,7 +19,9 @@ export function init() {
   return program;
 }
 
-export function errorHandler(action: (...args: unknown[]) => void | Promise<void>) {
+export function errorHandler(
+  action: (...args: unknown[]) => void | Promise<void>,
+) {
   return async (...args: unknown[]) => {
     const options = args.pop() as GlobalCommandOptions;
 

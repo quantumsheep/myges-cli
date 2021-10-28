@@ -1,9 +1,8 @@
 import { promises as fs } from 'fs';
-import path from 'path';
 import inquirer from 'inquirer';
 import { homedir } from 'os';
-
-import * as token from './token';
+import path from 'path';
+import { GesAPI } from '.';
 import { AccessToken } from './ges-api';
 
 const config_path = path.resolve(homedir(), '.myges');
@@ -33,7 +32,7 @@ export async function prompt_credentials(): Promise<
 
     return {
       username,
-      ...(await token.authenticate(username, password)),
+      ...(await GesAPI.generateAccessToken(username, password)),
     };
   } catch (e) {
     if (e.isTtyError) {
@@ -83,7 +82,7 @@ export async function load(
         },
       ]);
 
-      const info = await token.authenticate(parsed.username, password);
+      const info = await GesAPI.generateAccessToken(parsed.username, password);
       parsed.access_token = info.access_token;
       parsed.token_type = info.token_type;
       parsed.expires = Date.now() + parseInt(info.expires_in, 10) * 1000;
