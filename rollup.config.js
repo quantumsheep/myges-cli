@@ -4,7 +4,7 @@ import { terser } from "rollup-plugin-terser";
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
-  input: "dist/app.js",
+  input: "dist/cli.js",
   plugins: [json(), commonjs(), terser()],
   context: 'this',
   output: {
