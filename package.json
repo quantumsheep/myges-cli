@@ -5,7 +5,7 @@
   "keywords": [],
   "main": "dist/index.js",
   "scripts": {
-    "start": "node .",
+    "start": "node dist/cli.js",
     "dev": "nodemon .",
     "build": "tsc",
     "bundle": "rollup -c",
