@@ -20,6 +20,7 @@ interface CommandOptions extends GlobalCommandOptions {
 async function action(days: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
+    const credentials = await configurator.loadGoogleCredentials();
     const api = new GesAPI(config);
 
     const now = new Date();
@@ -85,9 +86,9 @@ async function action(days: string, options: CommandOptions) {
         Number.parseInt(days) / 2
       }sec before adding events to avoid rate limit of requests`,
     );
-    removeEvents(start, end);
+    removeEvents(start, end, credentials);
     setTimeout(() => {
-      pushToCalendar(agenda);
+      pushToCalendar(agenda, credentials);
     }, (1000 * Number.parseInt(days)) / 2);
   } catch (e) {
     if (options.debug) {
