@@ -4,6 +4,8 @@ import { homedir } from 'os';
 import path from 'path';
 import { GesAPI } from '.';
 import { AccessToken } from './ges-api';
+import { getGoogleAccessToken, GoogleCredentials } from './google-calendar';
+import { Credentials as GoogleToken } from 'google-auth-library';
 
 const config_path = path.resolve(homedir(), '.myges');
 
@@ -12,6 +14,8 @@ export interface Config {
   access_token: string;
   token_type: string;
   expires: number;
+  google_api_credentials: GoogleCredentials;
+  google_api_token: GoogleToken;
 }
 
 export async function prompt_credentials(): Promise<
@@ -33,6 +37,44 @@ export async function prompt_credentials(): Promise<
     return {
       username,
       ...(await GesAPI.generateAccessToken(username, password)),
+    };
+  } catch (e) {
+    if (e.isTtyError) {
+      throw new Error(
+        `Prompt couldn't be rendered in the current environment: ${e.message}`,
+      );
+    } else {
+      throw e;
+    }
+  }
+}
+
+export async function prompt_google_credentials(): Promise<GoogleCredentials> {
+  try {
+    const { client_secret, client_id, redirect_uris } = await inquirer.prompt([
+      {
+        message:
+          "Enter 'client_secret' content from credentials.json file downloaded from Google",
+        name: 'client_secret',
+      },
+      {
+        message:
+          "Enter 'client_id' content from credentials.json file downloaded from Google",
+        name: 'client_id',
+      },
+      {
+        message:
+          "Enter 'redirect_uris' content from credentials.json file downloaded from Google",
+        name: 'redirect_uris',
+      },
+    ]);
+
+    return {
+      installed: {
+        client_secret,
+        client_id,
+        redirect_uris,
+      },
     };
   } catch (e) {
     if (e.isTtyError) {
@@ -102,6 +144,41 @@ export async function load(
     return {
       access_token: null,
       token_type: null,
+    };
+  }
+}
+
+export async function loadGoogleCredentials(): Promise<
+  Pick<Config, 'google_api_credentials' | 'google_api_token'>
+> {
+  try {
+    const config = await fs.readFile(config_path, { encoding: 'utf8' });
+    const parsed: Config = JSON.parse(config);
+
+    if (!parsed.google_api_credentials) {
+      parsed.google_api_credentials = await prompt_google_credentials();
+      await save(parsed);
+    }
+
+    if (
+      !parsed.google_api_token ||
+      (parsed.google_api_token.expiry_date &&
+        Date.now() >= parsed.google_api_token.expiry_date)
+    ) {
+      parsed.google_api_token = getGoogleAccessToken(
+        parsed.google_api_credentials,
+      );
+      await save(parsed);
+    }
+
+    return {
+      google_api_credentials: parsed.google_api_credentials ?? null,
+      google_api_token: parsed.google_api_token ?? null,
+    };
+  } catch (_) {
+    return {
+      google_api_credentials: null,
+      google_api_token: null,
     };
   }
 }
