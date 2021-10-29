@@ -5,10 +5,27 @@ import readline from 'readline';
 import { AgendaItem } from './interfaces/agenda.interface';
 import { formatRFC3339 } from 'date-fns';
 import async from 'async';
+import cliProgress from 'cli-progress';
+import colors from 'colors';
+import { getCampusLocation } from './campus-location';
 import Calendar = calendar_v3.Calendar;
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
-import { campusLocations } from './campus-location';
+
+const multiBar = new cliProgress.MultiBar({
+  format:
+    ' {task} |' + colors.blue('{bar}') + '| {percentage}% || {value}/{total}',
+  barCompleteChar: '\u2588',
+  barIncompleteChar: '\u2591',
+  hideCursor: true,
+});
+let eventAdded = true;
+let eventRemoved = true;
+const taskComplete = () => {
+  if (eventAdded && eventRemoved) {
+    multiBar.stop();
+  }
+};
 
 export const readEvents = (startTime: Date, endTime: Date) => {
   fs.readFile('credentials.json', (err, data) => {
@@ -71,25 +88,36 @@ const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
     auth,
     http2: true,
   });
-  async.eachSeries(events, (event: Schema$Event, callback) => {
-    calendar.events.insert(
-      {
-        calendarId: process.env.CALENDAR_ID,
-        requestBody: event,
-      },
-      { http2: true },
-      (err, res) => {
-        setTimeout(() => {
-          if (err) {
-            console.error(err);
-            callback(err);
-          } else {
-            callback();
-          }
-        }, 100);
-      },
-    );
+  eventAdded = false;
+  const progressBar = multiBar.create(events.length, 0, {
+    task: 'Adding new events  ',
   });
+  async
+    .eachSeries(events, (event: Schema$Event, callback) => {
+      calendar.events.insert(
+        {
+          calendarId: process.env.CALENDAR_ID,
+          requestBody: event,
+        },
+        { http2: true },
+        (err, res) => {
+          progressBar.increment();
+          setTimeout(() => {
+            if (err) {
+              console.error(err);
+              callback(err);
+            } else {
+              callback();
+            }
+          }, 100);
+        },
+      );
+    })
+    .finally(() => {
+      progressBar.stop();
+      eventAdded = true;
+      taskComplete();
+    });
 };
 
 const displayEvents = (err: Error, res: { data: Schema$Events }) => {
@@ -114,25 +142,36 @@ const deleteEvents = (
   if (err) return console.error('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
-    async.eachSeries(events, (event, callback) => {
-      calendar.events.delete(
-        {
-          calendarId: process.env.CALENDAR_ID,
-          eventId: event.id,
-        },
-        { http2: true },
-        (err, res) => {
-          setTimeout(() => {
-            if (err) {
-              console.error(err);
-              callback(err);
-            } else {
-              callback();
-            }
-          }, 100);
-        },
-      );
+    eventRemoved = false;
+    const progressBar = multiBar.create(events.length, 0, {
+      task: 'Removing old events',
     });
+    async
+      .eachSeries(events, (event, callback) => {
+        calendar.events.delete(
+          {
+            calendarId: process.env.CALENDAR_ID,
+            eventId: event.id,
+          },
+          { http2: true },
+          (err, res) => {
+            progressBar.increment();
+            setTimeout(() => {
+              if (err) {
+                console.error(err);
+                callback(err);
+              } else {
+                callback();
+              }
+            }, 100);
+          },
+        );
+      })
+      .finally(() => {
+        progressBar.stop();
+        eventRemoved = true;
+        taskComplete();
+      });
   } else {
     console.log('No events to delete found.');
   }
@@ -155,24 +194,18 @@ const getEventColorId = (agendaItem: AgendaItem) => {
   if (!agendaItem.rooms || agendaItem.rooms.length == 0) {
     return '11';
   }
-  if (agendaItem.rooms[0].campus === 'NATION1') {
-    return undefined;
-  }
-  if (agendaItem.rooms[0].campus === 'NATION2') {
-    return '2';
-  }
-  return '5';
+  return getCampusLocation(agendaItem.rooms[0].campus)[1];
 };
 
 const getEventLocation = (agendaItem: AgendaItem) => {
   if (!agendaItem.rooms || agendaItem.rooms.length === 0) {
     return undefined;
   }
-  return campusLocations.get(agendaItem.rooms[0].campus);
+  return getCampusLocation(agendaItem.rooms[0].campus)[0];
 };
 
 const createEvent = (agendaItem: AgendaItem): Schema$Event => {
-  const event: Schema$Event = {
+  return {
     summary: agendaItem.name,
     description: getEventDescription(agendaItem),
     colorId: getEventColorId(agendaItem),
@@ -186,7 +219,6 @@ const createEvent = (agendaItem: AgendaItem): Schema$Event => {
       timeZone: 'Europe/Paris',
     },
   };
-  return event;
 };
 
 const getClient = (credentials): OAuth2Client => {

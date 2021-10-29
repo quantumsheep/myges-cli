@@ -1,12 +1,11 @@
 import { Command } from 'commander';
-import { addDays, endOfDay, format, startOfDay } from 'date-fns';
+import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import inquirer from 'inquirer';
 import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as api from '../ges-api';
 import { AgendaItem } from '../interfaces/agenda.interface';
 import { pushToCalendar, removeEvents } from '../google-calendar';
-import { fr } from 'date-fns/locale';
 
 export function register(program: Command) {
   program
@@ -23,7 +22,7 @@ async function action(days: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
 
-    const now = new Date();
+    const now = subDays(new Date(), 5);
 
     if (!days) {
       const answers = await inquirer.prompt([
@@ -67,7 +66,7 @@ async function action(days: string, options: CommandOptions) {
           item.reservation_id != agenda[index - 1].reservation_id,
       );
 
-    for (const agendaItem of agenda) {
+    /*for (const agendaItem of agenda) {
       const start = new Date(agendaItem.start_date);
       const end = new Date(agendaItem.end_date);
       const course = agendaItem.name;
@@ -79,22 +78,19 @@ async function action(days: string, options: CommandOptions) {
       const endTime = format(end, 'kk:mm');
       console.log(
         `Cours : ${course} | Intervenant : ${teacher} | Date : ${date} (${startTime} - ${endTime}) | Lieux : ${agendaItem.rooms?.map(
-          (room) =>
-            ` ${room.campus.toUpperCase()} ${room.name} ${room.latitude},${
-              room.longitude
-            }`,
+          (room) => ` ${room.campus.toUpperCase()} ${room.name}`,
         )}`,
       );
-    }
+    }*/
+    console.log(`Founded ${agenda.length} events in this date range`);
     console.log('Removing previous events on calendar in given date range...');
-    removeEvents(start, end);
     console.log(
       `Waiting around ${
         Number.parseInt(days) / 2
       }sec before add events to avoid rate limit of requests`,
     );
+    removeEvents(start, end);
     setTimeout(() => {
-      console.log('Adding new events on calendar in given date range...');
       pushToCalendar(agenda);
     }, (1000 * Number.parseInt(days)) / 2);
   } catch (e) {
