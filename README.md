@@ -23,6 +23,7 @@ Options:
 Commands:
   absences [options] [year]         list absences
   agenda [options] [week]           fetch agenda
+  calendar-sync [days]              sync myges calendar with Google Calendar
   contribute                        show useful links
   courses [options] [year]          list courses
   grades [options] [year]           list grades
@@ -62,3 +63,25 @@ You can also join or quit a project group.
 - `myges project <id> groups` -> List available groups for the specified project
 - `myges project <id> join [group]` -> Join a group. You can specify the group by replacing the optional *`[group]`* argument, else it will prompt a selector
 - `myges project <id> quit` -> Quit the current group you're in. A confirmation will be required before executing the request
+
+## Calendar Sync
+
+This command allows you to syncronize your calendar on goocle calendar (and thus no longer use the myges planning!)
+
+You need to setup few things before using this script.
+
+### Setup Google API
+
+To make the script work, you need to create a google calendar API and save its information like this :
+
+* Rendez vous sur [https://developers.google.com/calendar/quickstart/php](https://developers.google.com/calendar/quickstart/php)
+* Créez un projet Google Calendar API (retenez bien le nom que vous donnez à votre projet pour le `env.php`) : 
+
+|                                           |                                           |
+| ----------------------------------------- | ----------------------------------------- |
+| ![image](https://i.imgur.com/xZkQC03.png) | ![image](https://i.imgur.com/QVQ6vH2.png) |
+| ![image](https://i.imgur.com/AmHIOfb.png) |                                           |
+
+* Enregistrez le fichier `credentials.json` à la racine du projet :
+
+![image](https://i.imgur.com/XxVO6z5.png)

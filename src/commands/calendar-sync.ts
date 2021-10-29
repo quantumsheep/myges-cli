@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
+import { addDays, endOfDay, format, startOfDay } from 'date-fns';
 import inquirer from 'inquirer';
 import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
@@ -22,7 +22,7 @@ async function action(days: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
 
-    const now = subDays(new Date(), 5);
+    const now = new Date();
 
     if (!days) {
       const answers = await inquirer.prompt([
@@ -82,12 +82,12 @@ async function action(days: string, options: CommandOptions) {
         )}`,
       );
     }*/
-    console.log(`Founded ${agenda.length} events in this date range`);
+    console.log(`Found ${agenda.length} events in this date range`);
     console.log('Removing previous events on calendar in given date range...');
     console.log(
       `Waiting around ${
         Number.parseInt(days) / 2
-      }sec before add events to avoid rate limit of requests`,
+      }sec before adding events to avoid rate limit of requests`,
     );
     removeEvents(start, end);
     setTimeout(() => {
