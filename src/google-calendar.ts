@@ -37,52 +37,52 @@ const taskComplete = () => {
   }
 };
 
-export const readEvents = (
+export function readEvents(
   startTime: Date,
   endTime: Date,
   calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
-) => {
+) {
   const googleClient = getClient(
     config.google_api_credentials,
     config.google_api_token,
   );
   retrieveEvents(googleClient, calendarId, startTime, endTime, displayEvents);
-};
+}
 
-export const removeEvents = (
+export function removeEvents(
   startTime: Date,
   endTime: Date,
   calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
-) => {
+) {
   const googleClient = getClient(
     config.google_api_credentials,
     config.google_api_token,
   );
   retrieveEvents(googleClient, calendarId, startTime, endTime, deleteEvents);
-};
+}
 
-export const pushToCalendar = (
+export function pushToCalendar(
   events: AgendaItem[],
   calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
-) => {
+) {
   const googleClient = getClient(
     config.google_api_credentials,
     config.google_api_token,
   );
   const googleEvents = events.map((event) => createEvent(event));
   addEvents(googleClient, calendarId, googleEvents);
-};
+}
 
-const retrieveEvents = (
+function retrieveEvents(
   auth: OAuth2Client,
   calendarId: string,
   startTime: Date,
   endTime: Date,
   callback,
-) => {
+) {
   const calendar: Calendar = google.calendar({
     version: 'v3',
     auth,
@@ -98,13 +98,13 @@ const retrieveEvents = (
     },
     (err, res) => callback(err, res, calendar),
   );
-};
+}
 
-const addEvents = (
+function addEvents(
   auth: OAuth2Client,
   calendarId: string,
   events: Schema$Event[],
-) => {
+) {
   const calendar: Calendar = google.calendar({
     version: 'v3',
     auth,
@@ -142,9 +142,9 @@ const addEvents = (
     eventAdded = true;
     taskComplete();
   });
-};
+}
 
-const displayEvents = (err: Error, res: { data: Schema$Events }) => {
+function displayEvents(err: Error, res: { data: Schema$Events }) {
   if (err) return console.log('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
@@ -156,14 +156,14 @@ const displayEvents = (err: Error, res: { data: Schema$Events }) => {
   } else {
     console.log('No upcoming events found.');
   }
-};
+}
 
-const deleteEvents = (
+function deleteEvents(
   err: Error,
   res: { data: Schema$Events },
   calendar: Calendar,
   calendarId: string,
-) => {
+) {
   if (err) return console.error('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
@@ -203,9 +203,9 @@ const deleteEvents = (
   } else {
     console.log('No events to delete found.');
   }
-};
+}
 
-const getEventDescription = (agendaItem: AgendaItem) => {
+function getEventDescription(agendaItem: AgendaItem) {
   let description = '';
   if (agendaItem.teacher && agendaItem.teacher.length > 0) {
     description += `<span>Intervenant : ${agendaItem.teacher} </span><br>`;
@@ -216,23 +216,23 @@ const getEventDescription = (agendaItem: AgendaItem) => {
       .join('')}</ul></span>`;
   }
   return description;
-};
+}
 
-const getEventColorId = (agendaItem: AgendaItem) => {
+function getEventColorId(agendaItem: AgendaItem) {
   if (!agendaItem.rooms || agendaItem.rooms.length == 0) {
     return '11';
   }
   return getCampusLocation(agendaItem.rooms[0].campus)[1];
-};
+}
 
-const getEventLocation = (agendaItem: AgendaItem) => {
+function getEventLocation(agendaItem: AgendaItem) {
   if (!agendaItem.rooms || agendaItem.rooms.length === 0) {
     return undefined;
   }
   return getCampusLocation(agendaItem.rooms[0].campus)[0];
-};
+}
 
-const createEvent = (agendaItem: AgendaItem): Schema$Event => {
+function createEvent(agendaItem: AgendaItem): Schema$Event {
   return {
     summary: agendaItem.name,
     description: getEventDescription(agendaItem),
@@ -247,12 +247,12 @@ const createEvent = (agendaItem: AgendaItem): Schema$Event => {
       timeZone: 'Europe/Paris',
     },
   };
-};
+}
 
-const getClient = (
+function getClient(
   credentials: GoogleCredentials,
   token: GoogleToken,
-): OAuth2Client => {
+): OAuth2Client {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
@@ -262,11 +262,11 @@ const getClient = (
 
   oAuth2Client.setCredentials(token);
   return oAuth2Client;
-};
+}
 
-export const getGoogleAccessToken = (
+export function getGoogleAccessToken(
   credentials: GoogleCredentials,
-): GoogleToken => {
+): GoogleToken {
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
@@ -293,4 +293,4 @@ export const getGoogleAccessToken = (
     });
   });
   return googleToken;
-};
+}
