@@ -16,6 +16,7 @@ export interface Config {
   expires: number;
   google_api_credentials: GoogleCredentials;
   google_api_token: GoogleToken;
+  google_calendar_id: string;
 }
 
 export async function prompt_credentials(): Promise<
@@ -76,6 +77,27 @@ export async function prompt_google_credentials(): Promise<GoogleCredentials> {
         redirect_uris,
       },
     };
+  } catch (e) {
+    if (e.isTtyError) {
+      throw new Error(
+        `Prompt couldn't be rendered in the current environment: ${e.message}`,
+      );
+    } else {
+      throw e;
+    }
+  }
+}
+
+export async function prompt_google_calendar_id(): Promise<string> {
+  try {
+    const { calendar_id } = await inquirer.prompt([
+      {
+        message: 'Enter your calendar ID',
+        name: 'calendar_id',
+      },
+    ]);
+
+    return calendar_id;
   } catch (e) {
     if (e.isTtyError) {
       throw new Error(
@@ -151,17 +173,17 @@ export async function load(
 export async function loadGoogleCredentials(): Promise<
   Pick<Config, 'google_api_credentials' | 'google_api_token'>
 > {
-  //TODO figure out how to handle bad credentials and override existings
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
     const parsed: Config = JSON.parse(config);
 
     if (!parsed.google_api_credentials) {
       parsed.google_api_credentials = await prompt_google_credentials();
+      parsed.google_api_token = getGoogleAccessToken(
+        parsed.google_api_credentials,
+      );
       await save(parsed);
-    }
-
-    if (
+    } else if (
       !parsed.google_api_token ||
       (parsed.google_api_token.expiry_date &&
         Date.now() >= parsed.google_api_token.expiry_date)
@@ -181,6 +203,22 @@ export async function loadGoogleCredentials(): Promise<
       google_api_credentials: null,
       google_api_token: null,
     };
+  }
+}
+
+export async function loadGoogleCalendarId(): Promise<string> {
+  try {
+    const config = await fs.readFile(config_path, { encoding: 'utf8' });
+    const parsed: Config = JSON.parse(config);
+
+    if (!parsed.google_calendar_id) {
+      parsed.google_calendar_id = await prompt_google_calendar_id();
+      await save(parsed);
+    }
+
+    return parsed.google_calendar_id;
+  } catch (_) {
+    return null;
   }
 }
 
