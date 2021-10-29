@@ -108,9 +108,5 @@ dist
 
 .idea/
 
-credentials.json
-
-token.json
-
 # macOS metadata directory
 .DS_Store
