@@ -21,6 +21,7 @@ async function action(days: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
     const credentials = await configurator.loadGoogleCredentials();
+    const calendarId = await configurator.loadGoogleCalendarId();
     const api = new GesAPI(config);
 
     const now = new Date();
@@ -86,9 +87,9 @@ async function action(days: string, options: CommandOptions) {
         Number.parseInt(days) / 2
       }sec before adding events to avoid rate limit of requests`,
     );
-    removeEvents(start, end, credentials);
+    removeEvents(start, end, calendarId, credentials);
     setTimeout(() => {
-      pushToCalendar(agenda, credentials);
+      pushToCalendar(agenda, calendarId, credentials);
     }, (1000 * Number.parseInt(days)) / 2);
   } catch (e) {
     if (options.debug) {

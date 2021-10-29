@@ -41,29 +41,32 @@ const taskComplete = () => {
 export const readEvents = (
   startTime: Date,
   endTime: Date,
+  calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
 ) => {
   const googleClient = getClient(
     config.google_api_credentials,
     config.google_api_token,
   );
-  retrieveEvents(googleClient, startTime, endTime, displayEvents);
+  retrieveEvents(googleClient, calendarId, startTime, endTime, displayEvents);
 };
 
 export const removeEvents = (
   startTime: Date,
   endTime: Date,
+  calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
 ) => {
   const googleClient = getClient(
     config.google_api_credentials,
     config.google_api_token,
   );
-  retrieveEvents(googleClient, startTime, endTime, deleteEvents);
+  retrieveEvents(googleClient, calendarId, startTime, endTime, deleteEvents);
 };
 
 export const pushToCalendar = (
   events: AgendaItem[],
+  calendarId: string,
   config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
 ) => {
   const googleClient = getClient(
@@ -71,11 +74,12 @@ export const pushToCalendar = (
     config.google_api_token,
   );
   const googleEvents = events.map((event) => createEvent(event));
-  addEvents(googleClient, googleEvents);
+  addEvents(googleClient, calendarId, googleEvents);
 };
 
 const retrieveEvents = (
   auth: OAuth2Client,
+  calendarId: string,
   startTime: Date,
   endTime: Date,
   callback,
@@ -87,7 +91,7 @@ const retrieveEvents = (
   });
   calendar.events.list(
     {
-      calendarId: process.env.CALENDAR_ID,
+      calendarId,
       timeMin: startTime.toISOString(),
       timeMax: endTime.toISOString(),
       singleEvents: true,
@@ -97,7 +101,11 @@ const retrieveEvents = (
   );
 };
 
-const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
+const addEvents = (
+  auth: OAuth2Client,
+  calendarId: string,
+  events: Schema$Event[],
+) => {
   const calendar: Calendar = google.calendar({
     version: 'v3',
     auth,
@@ -111,7 +119,7 @@ const addEvents = (auth: OAuth2Client, events: Schema$Event[]) => {
     .eachSeries(events, (event: Schema$Event, callback) => {
       calendar.events.insert(
         {
-          calendarId: process.env.CALENDAR_ID,
+          calendarId,
           requestBody: event,
         },
         { http2: true },
@@ -153,6 +161,7 @@ const deleteEvents = (
   err: Error,
   res: { data: Schema$Events },
   calendar: Calendar,
+  calendarId: string,
 ) => {
   if (err) return console.error('The API returned an error: ' + err);
   const events = res.data.items;
@@ -165,7 +174,7 @@ const deleteEvents = (
       .eachSeries(events, (event, callback) => {
         calendar.events.delete(
           {
-            calendarId: process.env.CALENDAR_ID,
+            calendarId,
             eventId: event.id,
           },
           { http2: true },
