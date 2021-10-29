@@ -31,13 +31,11 @@
   "author": "Nathanael Demacon <nathanael.dmc@outlook.fr>",
   "license": "MIT",
   "dependencies": {
-    "async": "^3.2.1",
     "axios": "^0.21.1",
     "cli-progress": "^3.9.1",
     "colors": "^1.4.0",
     "commander": "^8.0.0",
     "date-fns": "^2.25.0",
-    "dotenv": "^10.0.0",
     "googleapis": "^89.0.0",
     "inquirer": "^8.1.1",
     "moment": "^2.29.1",
@@ -46,7 +44,6 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^19.0.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@types/async": "^3.2.9",
     "@types/cli-progress": "^3.9.2",
     "@types/inquirer": "^7.3.2",
     "@types/update-notifier": "^5.0.0",
