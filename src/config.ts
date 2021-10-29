@@ -151,6 +151,7 @@ export async function load(
 export async function loadGoogleCredentials(): Promise<
   Pick<Config, 'google_api_credentials' | 'google_api_token'>
 > {
+  //TODO figure out how to handle bad credentials and override existings
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
     const parsed: Config = JSON.parse(config);
