@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import inquirer from 'inquirer';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
-import * as api from '../../ges-api';
+import { GesAPI } from '../../ges-api';
 import { getProject } from './show';
 
 export function register(program: Command) {
@@ -20,9 +20,10 @@ interface CommandOptions extends GlobalCommandOptions {
 
 async function action(id: string, options: CommandOptions) {
   const config = await configurator.load(true);
-  const project = await getProject(id, options);
+  const api = new GesAPI(config);
 
-  const { uid } = await api.request('GET', '/me/profile', config);
+  const project = await getProject(id, options);
+  const { uid } = await api.getProfile();
 
   let group = project.groups.find(
     (group) =>
@@ -81,10 +82,10 @@ async function action(id: string, options: CommandOptions) {
   }
 
   try {
-    await api.request(
-      'POST',
-      `/me/courses/${project.rc_id}/projects/${project.project_id}/groups/${group.project_group_id}`,
-      config,
+    await api.joinProjectGroup(
+      project.rc_id,
+      project.project_id,
+      group.project_group_id,
     );
 
     console.log('Successfully joined the group!');

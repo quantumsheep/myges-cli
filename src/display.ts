@@ -1,6 +1,10 @@
 import colors from 'colors';
 
-function render(data: Record<string, unknown>[], columns: Record<string, number>, show_keys: boolean = true) {
+function render(
+  data: Record<string, unknown>[],
+  columns: Record<string, number>,
+  show_keys = true,
+) {
   if (show_keys) {
     for (const col in columns) {
       const padding = columns[col] - col.length;
@@ -53,20 +57,26 @@ function get_keys(data: Record<string, unknown>[]) {
   return get_ordered_set(...data.map(Object.keys));
 }
 
-function get_columns_length(data: Record<string, unknown>[], keys: string[] = get_keys(data)) {
+function get_columns_length(
+  data: Record<string, unknown>[],
+  keys: string[] = get_keys(data),
+) {
   return keys.reduce<Record<string, number>>((o, key) => {
-    o[key] = Math.max(key.length, ...data.map((row) => ((key in row) ? ((`${row[key]}`).length) : 0)));
+    o[key] = Math.max(
+      key.length,
+      ...data.map((row) => (key in row ? `${row[key]}`.length : 0)),
+    );
     return o;
   }, {});
 }
 
-export function table(data: Record<string, unknown>[], show_keys: boolean = true) {
+export function table(data: Record<string, unknown>[], show_keys = true) {
   const columns = get_columns_length(data);
 
   render(data, columns, show_keys);
 }
 
-export function multiple(data: Record<string, unknown>[][], show_keys: boolean = true) {
+export function multiple(data: Record<string, unknown>[][], show_keys = true) {
   const columns = get_ordered_set(...data.map(get_keys));
 
   const columns_length = data.reduce((o, array) => {

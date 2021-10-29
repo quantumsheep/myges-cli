@@ -4,7 +4,7 @@ import moment from 'moment';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
 import * as configurator from '../../config';
 import * as display from '../../display';
-import * as api from '../../ges-api';
+import { GesAPI } from '../../ges-api';
 import { getProject } from './show';
 
 export function register(program: Command) {
@@ -39,13 +39,10 @@ export interface Step {
 
 async function action(id: string, options: CommandOptions) {
   const config = await configurator.load(true);
+  const api = new GesAPI(config);
 
   if (options.all) {
-    const steps = await api.request<Step[]>(
-      'GET',
-      `/me/nextProjectSteps`,
-      config,
-    );
+    const steps = await api.getNextProjectSteps();
 
     if (options.raw) {
       console.log(JSON.stringify(steps));

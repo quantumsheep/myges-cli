@@ -1,22 +1,22 @@
 {
   "name": "myges",
-  "version": "3.1.0",
+  "version": "4.1.0",
   "description": "",
   "keywords": [],
-  "main": "dist/bundle.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "node .",
     "dev": "nodemon .",
     "build": "tsc",
     "bundle": "rollup -c",
     "lint": "eslint src/**/*.ts --fix",
-    "prepare": "npm run build && npm run bundle"
+    "prepare": "npm run build"
   },
   "files": [
-    "dist/bundle.js"
+    "dist"
   ],
   "bin": {
-    "myges": "dist/bundle.js"
+    "myges": "dist/cli.js"
   },
   "contributors": [
     {

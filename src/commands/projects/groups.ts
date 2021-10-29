@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { errorHandler, GlobalCommandOptions } from '../../commands-base';
-import * as configurator from '../../config';
 import * as display from '../../display';
 import { getProject } from './show';
 

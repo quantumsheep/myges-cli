@@ -4,7 +4,7 @@ import moment from 'moment';
 import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
 import * as display from '../display';
-import * as api from '../ges-api';
+import { GesAPI } from '../ges-api';
 
 export function register(program: Command) {
   program
@@ -22,6 +22,7 @@ interface CommandOptions extends GlobalCommandOptions {
 async function action(year: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
+    const api = new GesAPI(config);
 
     if (!year) {
       const answers = await inquirer.prompt([
@@ -29,7 +30,7 @@ async function action(year: string, options: CommandOptions) {
           message: 'Choose a year',
           name: 'year',
           type: 'list',
-          choices: await api.get_years(config),
+          choices: await api.getYears(),
         },
       ]);
 
@@ -37,7 +38,7 @@ async function action(year: string, options: CommandOptions) {
       year = answers.year;
     }
 
-    const absences = await api.request('GET', `/me/${year}/absences`, config);
+    const absences = await api.getAbsences(year);
 
     if (options.raw) {
       console.log(JSON.stringify(absences));

@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import * as configurator from '../config';
-import * as api from '../ges-api';
 import * as display from '../display';
 import { Method } from 'axios';
 import { errorHandler, GlobalCommandOptions } from '../commands-base';
+import { GesAPI } from '../ges-api';
 
 export function register(program: Command) {
   program
@@ -25,8 +25,9 @@ interface CommandOptions extends GlobalCommandOptions {
 async function action(method: Method, url: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
+    const api = new GesAPI(config);
 
-    const result = await api.request(method, url, config, {
+    const result = await api.request(method, url, {
       data: options.body,
       headers: {
         'Content-type': 'application/json; charset=utf-8',
