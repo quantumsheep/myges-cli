@@ -12,6 +12,14 @@ import Calendar = calendar_v3.Calendar;
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
 
+export interface GoogleCredentials {
+  installed: {
+    client_secret: string;
+    client_id: string;
+    redirect_uris: string[];
+  };
+}
+
 const multiBar = new cliProgress.MultiBar({
   format:
     ' {task} |' + colors.blue('{bar}') + '| {percentage}% || {value}/{total}',
