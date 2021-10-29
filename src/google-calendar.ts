@@ -4,7 +4,6 @@ import { calendar_v3, google } from 'googleapis';
 import readline from 'readline';
 import { AgendaItem } from './interfaces/agenda.interface';
 import { formatRFC3339 } from 'date-fns';
-import async from 'async';
 import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
@@ -115,32 +114,34 @@ const addEvents = (
   const progressBar = multiBar.create(events.length, 0, {
     task: 'Adding new events  ',
   });
-  async
-    .eachSeries(events, (event: Schema$Event, callback) => {
-      calendar.events.insert(
-        {
-          calendarId,
-          requestBody: event,
-        },
-        { http2: true },
-        (err, res) => {
-          progressBar.increment();
-          setTimeout(() => {
-            if (err) {
-              console.error(err);
-              callback(err);
-            } else {
-              callback();
-            }
-          }, 100);
-        },
-      );
-    })
-    .finally(() => {
-      progressBar.stop();
-      eventAdded = true;
-      taskComplete();
-    });
+  const tasks = events.map(
+    (event) =>
+      new Promise((resolve, reject) => {
+        calendar.events.insert(
+          {
+            calendarId,
+            requestBody: event,
+          },
+          { http2: true },
+          (err, res) => {
+            progressBar.increment();
+            setTimeout(() => {
+              if (err) {
+                console.error(err);
+                reject(err);
+              } else {
+                resolve(res);
+              }
+            }, 100);
+          },
+        );
+      }),
+  );
+  Promise.all(tasks).finally(() => {
+    progressBar.stop();
+    eventAdded = true;
+    taskComplete();
+  });
 };
 
 const displayEvents = (err: Error, res: { data: Schema$Events }) => {
@@ -170,32 +171,35 @@ const deleteEvents = (
     const progressBar = multiBar.create(events.length, 0, {
       task: 'Removing old events',
     });
-    async
-      .eachSeries(events, (event, callback) => {
-        calendar.events.delete(
-          {
-            calendarId,
-            eventId: event.id,
-          },
-          { http2: true },
-          (err, res) => {
-            progressBar.increment();
-            setTimeout(() => {
-              if (err) {
-                console.error(err);
-                callback(err);
-              } else {
-                callback();
-              }
-            }, 100);
-          },
-        );
-      })
-      .finally(() => {
-        progressBar.stop();
-        eventRemoved = true;
-        taskComplete();
-      });
+    const tasks = events.map(
+      (event) =>
+        new Promise((resolve, reject) => {
+          calendar.events.delete(
+            {
+              calendarId,
+              eventId: event.id,
+            },
+            { http2: true },
+            (err, res) => {
+              progressBar.increment();
+              setTimeout(() => {
+                if (err) {
+                  console.error(err);
+                  reject(err);
+                } else {
+                  resolve(res);
+                }
+              }, 100);
+            },
+          );
+        }),
+    );
+
+    Promise.all(tasks).finally(() => {
+      progressBar.stop();
+      eventRemoved = true;
+      taskComplete();
+    });
   } else {
     console.log('No events to delete found.');
   }
