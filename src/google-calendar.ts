@@ -9,6 +9,8 @@ import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
 import Calendar = calendar_v3.Calendar;
+import { Credentials as GoogleToken } from 'google-auth-library';
+
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
 
@@ -229,10 +231,10 @@ const createEvent = (agendaItem: AgendaItem): Schema$Event => {
   };
 };
 
-const getClient = (credentials): OAuth2Client => {
-  const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-  const TOKEN_PATH = 'token.json';
-
+const getClient = (
+  credentials: GoogleCredentials,
+  token: GoogleToken,
+): OAuth2Client => {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
@@ -240,18 +242,21 @@ const getClient = (credentials): OAuth2Client => {
     redirect_uris[0],
   );
 
-  // Check if we have previously stored a token.
-  const buffer = fs.readFileSync(TOKEN_PATH);
-  if (!buffer) return getAccessToken(oAuth2Client, TOKEN_PATH, SCOPES);
-  oAuth2Client.setCredentials(JSON.parse(buffer.toString()));
+  oAuth2Client.setCredentials(token);
   return oAuth2Client;
 };
 
-const getAccessToken = (
-  oAuth2Client: OAuth2Client,
-  TOKEN_PATH,
-  SCOPES,
-): OAuth2Client => {
+export const getGoogleAccessToken = (
+  credentials: GoogleCredentials,
+): GoogleToken => {
+  const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+  const { client_secret, client_id, redirect_uris } = credentials.installed;
+  const oAuth2Client = new google.auth.OAuth2(
+    client_id,
+    client_secret,
+    redirect_uris[0],
+  );
+
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -261,17 +266,13 @@ const getAccessToken = (
     input: process.stdin,
     output: process.stdout,
   });
+  let googleToken: GoogleToken;
   rl.question('Enter the code from that page here: ', (code) => {
     rl.close();
     oAuth2Client.getToken(code, (err, token) => {
       if (err) return console.error('Error retrieving access token', err);
-      oAuth2Client.setCredentials(token);
-      // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-        if (err) return console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
+      googleToken = token;
     });
   });
-  return oAuth2Client;
+  return googleToken;
 };
