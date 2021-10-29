@@ -3,8 +3,7 @@ import { addDays, endOfDay, format, startOfDay } from 'date-fns';
 import inquirer from 'inquirer';
 import { errorHandler, GlobalCommandOptions } from '../commands-base';
 import * as configurator from '../config';
-import * as api from '../ges-api';
-import { AgendaItem } from '../interfaces/agenda.interface';
+import { GesAPI } from '../ges-api';
 import { pushToCalendar, removeEvents } from '../google-calendar';
 
 export function register(program: Command) {
@@ -21,6 +20,7 @@ interface CommandOptions extends GlobalCommandOptions {
 async function action(days: string, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
+    const api = new GesAPI(config);
 
     const now = new Date();
 
@@ -47,11 +47,7 @@ async function action(days: string, options: CommandOptions) {
       )}...`,
     );
 
-    let agenda = await api.request<AgendaItem[]>(
-      'GET',
-      `/me/agenda?start=${start.valueOf()}&end=${end.valueOf()}`,
-      config,
-    );
+    let agenda = await api.getAgenda(start, end);
 
     if (agenda.length === 0) {
       console.log('Nothing to display in this dates range.');
