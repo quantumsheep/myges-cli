@@ -1,4 +1,7 @@
+
+
 # MyGES CLI
+
 A Command Line Interface replacement for MyGES ([Réseau GES](http://www.reseau-ges.fr/)' Extranet).
 
 # How to install
@@ -74,14 +77,29 @@ You need to setup few things before using this script.
 
 To make the script work, you need to create a google calendar API and save its information like this :
 
-* Rendez vous sur [https://developers.google.com/calendar/quickstart/php](https://developers.google.com/calendar/quickstart/php)
-* Créez un projet Google Calendar API (retenez bien le nom que vous donnez à votre projet pour le `env.php`) : 
+* Go to [https://developers.google.com/calendar/quickstart/php](https://developers.google.com/calendar/quickstart/php)
+* Create a Google Calendar API project
 
 |                                           |                                           |
 | ----------------------------------------- | ----------------------------------------- |
 | ![image](https://i.imgur.com/xZkQC03.png) | ![image](https://i.imgur.com/QVQ6vH2.png) |
 | ![image](https://i.imgur.com/AmHIOfb.png) |                                           |
 
-* Enregistrez le fichier `credentials.json` à la racine du projet :
+* Save the `credentials.json` file at the root of the project:
 
 ![image](https://i.imgur.com/XxVO6z5.png)
+
+### Create new Google Calendar
+
+> :warning: Be sure to create a calendar dedicated ONLY to your schedule! Otherwise the script will delete the other events present in your calendar ...
+
+To retrieve your calendar id:
+
+* Go to https://calendar.google.com
+* Go to "Settings and sharing" of the calendar dedicated to your planning
+* Go to "Settings and sharing" of the calendar dedicated to your planning
+![image](https://i.imgur.com/QAZPssf.png)
+* You will find the id of your diary in the section "Integrate the calendar"
+![image](https://i.imgur.com/1p0Ra2q.png)
+* Save this id in `.env` file at the root fo the project
+![image-20211029113735571](https://i.imgur.com/FiwiajB.png)
