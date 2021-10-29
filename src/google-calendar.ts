@@ -13,6 +13,7 @@ import { Credentials as GoogleToken } from 'google-auth-library';
 
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
+import { Config } from './config';
 
 export interface GoogleCredentials {
   installed: {
@@ -37,36 +38,40 @@ const taskComplete = () => {
   }
 };
 
-export const readEvents = (startTime: Date, endTime: Date) => {
-  fs.readFile('credentials.json', (err, data) => {
-    if (err) {
-      return console.log('Error loading client secret file:', err);
-    }
-    const googleClient = getClient(JSON.parse(data.toString()));
-    retrieveEvents(googleClient, startTime, endTime, displayEvents);
-  });
+export const readEvents = (
+  startTime: Date,
+  endTime: Date,
+  config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
+) => {
+  const googleClient = getClient(
+    config.google_api_credentials,
+    config.google_api_token,
+  );
+  retrieveEvents(googleClient, startTime, endTime, displayEvents);
 };
 
-export const removeEvents = (startTime: Date, endTime: Date) => {
-  fs.readFile('credentials.json', (err, data) => {
-    if (err) {
-      return console.log('Error loading client secret file:', err);
-    }
-    const googleClient = getClient(JSON.parse(data.toString()));
-    retrieveEvents(googleClient, startTime, endTime, deleteEvents);
-  });
+export const removeEvents = (
+  startTime: Date,
+  endTime: Date,
+  config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
+) => {
+  const googleClient = getClient(
+    config.google_api_credentials,
+    config.google_api_token,
+  );
+  retrieveEvents(googleClient, startTime, endTime, deleteEvents);
 };
 
-export const pushToCalendar = (events: AgendaItem[]) => {
-  fs.readFile('credentials.json', (err, data) => {
-    if (err) {
-      return console.log('Error loading client secret file:', err);
-    }
-    const googleClient = getClient(JSON.parse(data.toString()));
-    const googleEvents = events.map((event) => createEvent(event));
-
-    addEvents(googleClient, googleEvents);
-  });
+export const pushToCalendar = (
+  events: AgendaItem[],
+  config: Pick<Config, 'google_api_credentials' | 'google_api_token'>,
+) => {
+  const googleClient = getClient(
+    config.google_api_credentials,
+    config.google_api_token,
+  );
+  const googleEvents = events.map((event) => createEvent(event));
+  addEvents(googleClient, googleEvents);
 };
 
 const retrieveEvents = (
