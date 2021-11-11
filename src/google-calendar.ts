@@ -1,24 +1,21 @@
-import fs from 'fs';
-import { OAuth2Client } from 'google-auth-library';
+import { Credentials as GoogleToken, OAuth2Client } from 'google-auth-library';
 import { calendar_v3, google } from 'googleapis';
-import readline from 'readline';
 import { AgendaItem } from './interfaces/agenda.interface';
 import { formatRFC3339 } from 'date-fns';
 import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
+import { Config } from './config';
+import inquirer from 'inquirer';
 import Calendar = calendar_v3.Calendar;
-import { Credentials as GoogleToken } from 'google-auth-library';
 
 import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
-import { Config } from './config';
 
 export interface GoogleCredentials {
   installed: {
     client_secret: string;
     client_id: string;
-    redirect_uris: string[];
   };
 }
 
@@ -96,7 +93,7 @@ function retrieveEvents(
       singleEvents: true,
       orderBy: 'startTime',
     },
-    (err, res) => callback(err, res, calendar),
+    (err, res) => callback(err, res, calendar, calendarId),
   );
 }
 
@@ -114,28 +111,29 @@ function addEvents(
   const progressBar = multiBar.create(events.length, 0, {
     task: 'Adding new events  ',
   });
-  const tasks = events.map(
-    (event) =>
-      new Promise((resolve, reject) => {
-        calendar.events.insert(
-          {
-            calendarId,
-            requestBody: event,
-          },
-          { http2: true },
-          (err, res) => {
-            progressBar.increment();
-            setTimeout(() => {
+  const tasks = events.map((event, i) =>
+    setTimeout(
+      () =>
+        new Promise((resolve, reject) => {
+          calendar.events.insert(
+            {
+              calendarId,
+              requestBody: event,
+            },
+            { http2: true },
+            (err, res) => {
+              progressBar.increment();
               if (err) {
                 console.error(err);
                 reject(err);
               } else {
                 resolve(res);
               }
-            }, 100);
-          },
-        );
-      }),
+            },
+          );
+        }),
+      500 * (i + 1),
+    ),
   );
   Promise.all(tasks).finally(() => {
     progressBar.stop();
@@ -148,7 +146,7 @@ function displayEvents(err: Error, res: { data: Schema$Events }) {
   if (err) return console.log('The API returned an error: ' + err);
   const events = res.data.items;
   if (events.length) {
-    events.map((event, i) => {
+    events.forEach((event) => {
       const start = event.start.dateTime || event.start.date;
       const end = event.end.dateTime || event.end.date;
       console.log(`${start}->${end} - ${event.summary}`);
@@ -159,39 +157,39 @@ function displayEvents(err: Error, res: { data: Schema$Events }) {
 }
 
 function deleteEvents(
-  err: Error,
-  res: { data: Schema$Events },
+  errP: Error,
+  resP: { data: Schema$Events },
   calendar: Calendar,
   calendarId: string,
 ) {
-  if (err) return console.error('The API returned an error: ' + err);
-  const events = res.data.items;
+  if (errP) return console.error('The API returned an error: ' + errP);
+  const events = resP.data.items;
   if (events.length) {
     eventRemoved = false;
     const progressBar = multiBar.create(events.length, 0, {
       task: 'Removing old events',
     });
     const tasks = events.map(
-      (event) =>
+      (event, i) =>
         new Promise((resolve, reject) => {
-          calendar.events.delete(
-            {
-              calendarId,
-              eventId: event.id,
-            },
-            { http2: true },
-            (err, res) => {
-              progressBar.increment();
-              setTimeout(() => {
+          setTimeout(() => {
+            calendar.events.delete(
+              {
+                calendarId,
+                eventId: event.id,
+              },
+              { http2: true },
+              (err, res) => {
+                progressBar.increment();
                 if (err) {
                   console.error(err);
                   reject(err);
                 } else {
                   resolve(res);
                 }
-              }, 100);
-            },
-          );
+              },
+            );
+          }, 500 * (i + 1));
         }),
     );
 
@@ -253,44 +251,50 @@ function getClient(
   credentials: GoogleCredentials,
   token: GoogleToken,
 ): OAuth2Client {
-  const { client_secret, client_id, redirect_uris } = credentials.installed;
+  const { client_secret, client_id } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
-    redirect_uris[0],
+    'urn:ietf:wg:oauth:2.0:oob',
   );
 
   oAuth2Client.setCredentials(token);
   return oAuth2Client;
 }
 
-export function getGoogleAccessToken(
+export async function getGoogleAccessToken(
   credentials: GoogleCredentials,
-): GoogleToken {
+): Promise<GoogleToken> {
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-  const { client_secret, client_id, redirect_uris } = credentials.installed;
+  const { client_secret, client_id } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
-    redirect_uris[0],
+    'urn:ietf:wg:oauth:2.0:oob',
   );
 
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
   });
-  console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  let googleToken: GoogleToken;
-  rl.question('Enter the code from that page here: ', (code) => {
-    rl.close();
-    oAuth2Client.getToken(code, (err, token) => {
-      if (err) return console.error('Error retrieving access token', err);
-      googleToken = token;
-    });
-  });
-  return googleToken;
+
+  try {
+    const { token_code } = await inquirer.prompt([
+      {
+        message:
+          "Authorize this app by visiting this url : \n'" + authUrl + "'\n-> ",
+        name: 'token_code',
+      },
+    ]);
+    console.log('before');
+
+    const { tokens } = await oAuth2Client.getToken(token_code);
+    console.log('after');
+    console.log(tokens);
+    return tokens;
+  } catch (e) {
+    throw new Error(
+      `Prompt couldn't be rendered in the current environment: ${e}`,
+    );
+  }
 }

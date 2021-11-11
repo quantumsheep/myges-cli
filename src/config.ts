@@ -14,9 +14,9 @@ export interface Config {
   access_token: string;
   token_type: string;
   expires: number;
-  google_api_credentials: GoogleCredentials;
-  google_api_token: GoogleToken;
-  google_calendar_id: string;
+  google_api_credentials?: GoogleCredentials;
+  google_api_token?: GoogleToken;
+  google_calendar_id?: string;
 }
 
 export async function prompt_credentials(): Promise<
@@ -52,29 +52,23 @@ export async function prompt_credentials(): Promise<
 
 export async function prompt_google_credentials(): Promise<GoogleCredentials> {
   try {
-    const { client_secret, client_id, redirect_uris } = await inquirer.prompt([
+    const { client_id, client_secret } = await inquirer.prompt([
       {
         message:
-          "Enter 'client_secret' content from credentials.json file downloaded from Google",
-        name: 'client_secret',
-      },
-      {
-        message:
-          "Enter 'client_id' content from credentials.json file downloaded from Google",
+          "Enter 'client_id' content from credentials.json file downloaded from Google : ",
         name: 'client_id',
       },
       {
         message:
-          "Enter 'redirect_uris' content from credentials.json file downloaded from Google",
-        name: 'redirect_uris',
+          "Enter 'client_secret' content from credentials.json file downloaded from Google : ",
+        name: 'client_secret',
       },
     ]);
 
     return {
       installed: {
-        client_secret,
         client_id,
-        redirect_uris,
+        client_secret,
       },
     };
   } catch (e) {
@@ -92,7 +86,8 @@ export async function prompt_google_calendar_id(): Promise<string> {
   try {
     const { calendar_id } = await inquirer.prompt([
       {
-        message: 'Enter your calendar ID',
+        message:
+          "(WARNING !) Don't put calendar where you could have other personal events on it ! In that case this tool may erase them...\nEnter your calendar ID : ",
         name: 'calendar_id',
       },
     ]);
@@ -170,30 +165,43 @@ export async function load(
   }
 }
 
+async function setGoogleCredentials(parsed: Config): Promise<Config> {
+  parsed.google_api_credentials = await prompt_google_credentials();
+  console.log('step 1 done');
+  console.log(parsed);
+  parsed.google_api_token = await getGoogleAccessToken(
+    parsed.google_api_credentials,
+  );
+  console.log('done');
+  console.log(parsed);
+  await save(parsed);
+  return parsed;
+}
+
+async function setGoogleAccessToken(parsed: Config): Promise<Config> {
+  parsed.google_api_token = await getGoogleAccessToken(
+    parsed.google_api_credentials,
+  );
+  await save(parsed);
+  return parsed;
+}
+
 export async function loadGoogleCredentials(): Promise<
   Pick<Config, 'google_api_credentials' | 'google_api_token'>
 > {
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
-    const parsed: Config = JSON.parse(config);
-
+    let parsed: Config = JSON.parse(config);
     if (!parsed.google_api_credentials) {
-      parsed.google_api_credentials = await prompt_google_credentials();
-      parsed.google_api_token = getGoogleAccessToken(
-        parsed.google_api_credentials,
-      );
-      await save(parsed);
+      parsed = await setGoogleCredentials(parsed);
     } else if (
       !parsed.google_api_token ||
       (parsed.google_api_token.expiry_date &&
         Date.now() >= parsed.google_api_token.expiry_date)
     ) {
-      parsed.google_api_token = getGoogleAccessToken(
-        parsed.google_api_credentials,
-      );
-      await save(parsed);
+      parsed = await setGoogleAccessToken(parsed);
     }
-
+    console.log(parsed);
     return {
       google_api_credentials: parsed.google_api_credentials ?? null,
       google_api_token: parsed.google_api_token ?? null,

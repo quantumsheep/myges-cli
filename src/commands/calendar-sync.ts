@@ -56,41 +56,18 @@ async function action(days: string, options: CommandOptions) {
       return;
     }
 
-    agenda = agenda
+    agenda = [...agenda]
       .sort((a, b) => a.start_date - b.start_date)
       .filter(
-        (item, index, agenda) =>
+        (item, index, agendaArray) =>
           index === 0 ||
-          item.reservation_id != agenda[index - 1].reservation_id,
+          item.reservation_id != agendaArray[index - 1].reservation_id,
       );
-
-    /*for (const agendaItem of agenda) {
-      const start = new Date(agendaItem.start_date);
-      const end = new Date(agendaItem.end_date);
-      const course = agendaItem.name;
-      const teacher = agendaItem.teacher;
-      const date = format(start, 'EEEE d MMMM yyyy', {
-        locale: fr,
-      });
-      const startTime = format(start, 'kk:mm');
-      const endTime = format(end, 'kk:mm');
-      console.log(
-        `Cours : ${course} | Intervenant : ${teacher} | Date : ${date} (${startTime} - ${endTime}) | Lieux : ${agendaItem.rooms?.map(
-          (room) => ` ${room.campus.toUpperCase()} ${room.name}`,
-        )}`,
-      );
-    }*/
     console.log(`Found ${agenda.length} events in this date range`);
     console.log('Removing previous events on calendar in given date range...');
-    console.log(
-      `Waiting around ${
-        Number.parseInt(days) / 2
-      }sec before adding events to avoid rate limit of requests`,
-    );
     removeEvents(start, end, calendarId, credentials);
-    setTimeout(() => {
+
       pushToCalendar(agenda, calendarId, credentials);
-    }, (1000 * Number.parseInt(days)) / 2);
   } catch (e) {
     if (options.debug) {
       console.error(e);

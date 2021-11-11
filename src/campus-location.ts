@@ -9,7 +9,7 @@ const campusLocations = {
   MONTROUGE: ['11 rue Camille Pelletan, 92120 Montrouge', '6'],
   JOURDAN: ['6-10 bd Jourdan 75014 Paris', '7'],
   VAUGIRARD: ['273-277 rue de Vaugirard, 75012 Paris', '9'],
-  "MAIN D'OR": ['8‐14 Passage de la Main d’Or 75011 Paris', '8'],
+  'MAIN-D-OR': ['8‐14 Passage de la Main d’Or 75011 Paris', '8'],
 };
 
 export function getCampusLocation(key: string): string[] {
