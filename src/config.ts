@@ -165,15 +165,23 @@ export async function load(
   }
 }
 
-async function setGoogleCredentials(parsed: Config): Promise<Config> {
+export async function loadAll(): Promise<Config> {
+  try {
+    const config = await fs.readFile(config_path, { encoding: 'utf8' });
+    const parsed: Config = JSON.parse(config);
+
+    return parsed;
+  } catch (_) {
+    console.error('Error while retrieving config');
+    return process.exit(1);
+  }
+}
+
+export async function setGoogleCredentials(parsed: Config): Promise<Config> {
   parsed.google_api_credentials = await prompt_google_credentials();
-  console.log('step 1 done');
-  console.log(parsed);
   parsed.google_api_token = await getGoogleAccessToken(
     parsed.google_api_credentials,
   );
-  console.log('done');
-  console.log(parsed);
   await save(parsed);
   return parsed;
 }
@@ -194,11 +202,8 @@ export async function loadGoogleCredentials(): Promise<
     let parsed: Config = JSON.parse(config);
     if (!parsed.google_api_credentials) {
       parsed = await setGoogleCredentials(parsed);
-    } else if (
-      !parsed.google_api_token ||
-      (parsed.google_api_token.expiry_date &&
-        Date.now() >= parsed.google_api_token.expiry_date)
-    ) {
+    } else if (!parsed.google_api_token) {
+      // || (parsed.google_api_token.expiry_date && Date.now() >= parsed.google_api_token.expiry_date)
       parsed = await setGoogleAccessToken(parsed);
     }
     console.log(parsed);
@@ -214,16 +219,20 @@ export async function loadGoogleCredentials(): Promise<
   }
 }
 
+export async function setGoogleCalendarId(parsed: Config): Promise<string> {
+  parsed.google_calendar_id = await prompt_google_calendar_id();
+  await save(parsed);
+  return parsed.google_calendar_id;
+}
+
 export async function loadGoogleCalendarId(): Promise<string> {
   try {
     const config = await fs.readFile(config_path, { encoding: 'utf8' });
     const parsed: Config = JSON.parse(config);
 
     if (!parsed.google_calendar_id) {
-      parsed.google_calendar_id = await prompt_google_calendar_id();
-      await save(parsed);
+      parsed.google_calendar_id = await setGoogleCalendarId(parsed);
     }
-
     return parsed.google_calendar_id;
   } catch (_) {
     return null;
