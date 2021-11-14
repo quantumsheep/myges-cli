@@ -78,7 +78,7 @@ async function action(days: string, options: CommandOptions) {
       return;
     }
 
-    agenda = [...agenda]
+    agenda = agenda
       .sort((a, b) => a.start_date - b.start_date)
       .filter(
         (item, index, agendaArray) =>
