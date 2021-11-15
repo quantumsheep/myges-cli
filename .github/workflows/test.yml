@@ -31,7 +31,6 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: npm run bundle
       - run: chmod +x ./dist/cli.js
       - run: ./dist/cli.js
 
@@ -55,6 +54,5 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: npm run bundle
       - run: chmod +x ./dist/cli.js
       - run: ./dist/cli.js
