@@ -286,11 +286,8 @@ export async function getGoogleAccessToken(
         name: 'token_code',
       },
     ]);
-    console.log('before');
 
     const { tokens } = await oAuth2Client.getToken(token_code);
-    console.log('after');
-    console.log(tokens);
     return tokens;
   } catch (e) {
     throw new Error(

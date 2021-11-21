@@ -206,7 +206,6 @@ export async function loadGoogleCredentials(): Promise<
       // || (parsed.google_api_token.expiry_date && Date.now() >= parsed.google_api_token.expiry_date)
       parsed = await setGoogleAccessToken(parsed);
     }
-    console.log(parsed);
     return {
       google_api_credentials: parsed.google_api_credentials ?? null,
       google_api_token: parsed.google_api_token ?? null,
