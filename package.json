@@ -1,6 +1,6 @@
 {
   "name": "myges",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "",
   "keywords": [],
   "main": "dist/index.js",
@@ -8,7 +8,6 @@
     "start": "node dist/cli.js",
     "dev": "nodemon .",
     "build": "tsc",
-    "bundle": "rollup -c",
     "lint": "eslint src/**/*.ts --fix",
     "prepare": "npm run build"
   },
@@ -42,8 +41,6 @@
     "update-notifier": "^5.1.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-json": "^4.1.0",
     "@types/cli-progress": "^3.9.2",
     "@types/inquirer": "^7.3.2",
     "@types/update-notifier": "^5.0.0",
@@ -55,8 +52,6 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-prettier": "^3.4.0",
     "prettier": "^2.3.2",
-    "rollup": "^2.52.7",
-    "rollup-plugin-terser": "^7.0.2",
     "typescript": "^4.3.5"
   }
 }
