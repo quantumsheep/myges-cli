@@ -69,9 +69,12 @@ You can also join or quit a project group.
 
 ## Calendar Sync
 
-This command allows you to syncronize your calendar on goocle calendar (and thus no longer use the myges planning!)
+This command allows you to syncronize your calendar on goocle calendar (and thus no longer use the myges planning!).
 
-You need to setup few things before using this script.
+- `myges calendar-sync <days>` -> Sync google calendar from today to given number of days
+- `myges calendar-sync --reset_credentials` -> Reset google credentials and ask it again
+- `myges calendar-sync --reset_calendar` -> Reset google calendar ID and ask it again
+- You need to setup few things before using this script.
 
 ### Setup Google API
 
@@ -85,7 +88,7 @@ To make the script work, you need to create a google calendar API and save its i
 | ![image](https://i.imgur.com/xZkQC03.png) | ![image](https://i.imgur.com/QVQ6vH2.png) |
 | ![image](https://i.imgur.com/AmHIOfb.png) |                                           |
 
-* Save the `credentials.json` file at the root of the project:
+* Save the `credentials.json` file, you will need information inside it at first time.
 
 ![image](https://i.imgur.com/XxVO6z5.png)
 
@@ -96,10 +99,17 @@ To make the script work, you need to create a google calendar API and save its i
 To retrieve your calendar id:
 
 * Go to https://calendar.google.com
+
 * Go to "Settings and sharing" of the calendar dedicated to your planning
-* Go to "Settings and sharing" of the calendar dedicated to your planning
-![image](https://i.imgur.com/QAZPssf.png)
-* You will find the id of your diary in the section "Integrate the calendar"
-![image](https://i.imgur.com/1p0Ra2q.png)
-* Save this id in `.env` file at the root fo the project
-![image-20211029113735571](https://i.imgur.com/FiwiajB.png)
+  ![image](https://i.imgur.com/QAZPssf.png)
+
+* You will find the id of your calendar in the section "Integrate the calendar"
+  ![image](https://i.imgur.com/1p0Ra2q.png)
+
+  ### First launch
+
+  At the first launch, you will be asked to enter the various information that you have configured before.
+
+  If this is the first connection, follow the terminal's instructions to retrieve the google connection token
+
+  ![image-20211121185850513](images/README/image-20211121185850513.png)
