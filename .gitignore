@@ -106,5 +106,7 @@ dist
 # Config file
 /config.json
 
+.idea/
+
 # macOS metadata directory
 .DS_Store

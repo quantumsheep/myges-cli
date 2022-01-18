@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import * as absencesCommand from './absences';
 import * as agendaCommand from './agenda';
+import * as calendarCommand from './calendar-sync';
 import * as contributeCommand from './contribute';
 import * as coursesCommand from './courses';
 import * as gradesCommand from './grades';
@@ -12,6 +13,7 @@ import * as requestCommand from './request';
 export function register(program: Command) {
   absencesCommand.register(program);
   agendaCommand.register(program);
+  calendarCommand.register(program);
   contributeCommand.register(program);
   coursesCommand.register(program);
   gradesCommand.register(program);
