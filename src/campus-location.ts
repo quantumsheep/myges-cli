@@ -1,4 +1,4 @@
-const campusLocations = {
+const CAMPUS_LOCATIONS = {
   NATION1: ['242 rue du Faubourg Saint Antoine, 75012 Paris', undefined],
   NATION2: ['220 rue du Faubourg Saint Antoine, 75012 Paris', '2'],
   VOLTAIRE1: ['1 rue Bouvier, 75011 Paris', '5'],
@@ -13,5 +13,5 @@ const campusLocations = {
 };
 
 export function getCampusLocation(key: string): string[] {
-  return campusLocations[key] ?? [undefined, '11'];
+  return CAMPUS_LOCATIONS[key] ?? [undefined, '11'];
 }
