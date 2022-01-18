@@ -1,5 +1,3 @@
-
-
 # MyGES CLI
 
 A Command Line Interface replacement for MyGES ([Réseau GES](http://www.reseau-ges.fr/)' Extranet).
