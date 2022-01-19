@@ -136,7 +136,7 @@ function addEvents(
     ),
   );
   Promise.all(tasks).finally(() => {
-    progressBar.stop();
+    // progressBar.stop();
     eventAdded = true;
     taskComplete();
   });
@@ -194,7 +194,7 @@ function deleteEvents(
     );
 
     Promise.all(tasks).finally(() => {
-      progressBar.stop();
+      // progressBar.stop();
       eventRemoved = true;
       taskComplete();
     });
