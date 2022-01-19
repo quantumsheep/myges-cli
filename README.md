@@ -104,10 +104,13 @@ To retrieve your calendar id:
 * You will find the id of your calendar in the section "Integrate the calendar"
   ![image](https://i.imgur.com/1p0Ra2q.png)
 
-  ### First launch
+### First launch
 
-  At the first launch, you will be asked to enter the various information that you have configured before.
+At the first launch, you will be asked to enter the various information that you have configured before.
 
-  If this is the first connection, follow the terminal's instructions to retrieve the google connection token
+If this is the first connection, follow the terminal's instructions to retrieve the `google connection token`
+
+> When you click on the Google url, don't forget to copy the given authorization token and paste it into the CLI
+
 
   ![image-20211121185850513](images/README/image-20211121185850513.png)
