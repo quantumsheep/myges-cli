@@ -136,7 +136,7 @@ function addEvents(
     ),
   );
   Promise.all(tasks).finally(() => {
-    progressBar.stop();
+    // progressBar.stop();
     eventAdded = true;
     taskComplete();
   });
@@ -194,7 +194,7 @@ function deleteEvents(
     );
 
     Promise.all(tasks).finally(() => {
-      progressBar.stop();
+      // progressBar.stop();
       eventRemoved = true;
       taskComplete();
     });
@@ -262,6 +262,34 @@ function getClient(
   return oAuth2Client;
 }
 
+async function promptGoogleAccessToken(
+  authUrl: string,
+  oAuth2Client: OAuth2Client,
+) {
+  const { token_code } = await inquirer.prompt([
+    {
+      message:
+        "Authorize this app by visiting this url and retrieving authorization code : \n'" +
+        authUrl +
+        "'\nPast authorization code -> ",
+      name: 'token_code',
+    },
+  ]);
+
+  try {
+    const { tokens } = await oAuth2Client.getToken(token_code);
+    if (!tokens) {
+      throw new Error(
+        'An error has occurred when retrieving Google API authorization code',
+      );
+    }
+    return tokens;
+  } catch (e) {
+    console.error(e.message);
+    return promptGoogleAccessToken(authUrl, oAuth2Client);
+  }
+}
+
 export async function getGoogleAccessToken(
   credentials: GoogleCredentials,
 ): Promise<GoogleToken> {
@@ -279,16 +307,7 @@ export async function getGoogleAccessToken(
   });
 
   try {
-    const { token_code } = await inquirer.prompt([
-      {
-        message:
-          "Authorize this app by visiting this url : \n'" + authUrl + "'\n-> ",
-        name: 'token_code',
-      },
-    ]);
-
-    const { tokens } = await oAuth2Client.getToken(token_code);
-    return tokens;
+    return await promptGoogleAccessToken(authUrl, oAuth2Client);
   } catch (e) {
     throw new Error(
       `Prompt couldn't be rendered in the current environment: ${e}`,

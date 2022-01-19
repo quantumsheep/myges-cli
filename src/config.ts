@@ -207,14 +207,12 @@ export async function loadGoogleCredentials(): Promise<
       parsed = await setGoogleAccessToken(parsed);
     }
     return {
-      google_api_credentials: parsed.google_api_credentials ?? null,
-      google_api_token: parsed.google_api_token ?? null,
+      google_api_credentials: parsed.google_api_credentials,
+      google_api_token: parsed.google_api_token,
     };
-  } catch (_) {
-    return {
-      google_api_credentials: null,
-      google_api_token: null,
-    };
+  } catch (e) {
+    console.error('Cannot retrieve google credentials : ' + e);
+    process.exit(1);
   }
 }
 

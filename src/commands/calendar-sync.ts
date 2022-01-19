@@ -10,9 +10,9 @@ import { pushToCalendar, removeEvents } from '../google-calendar';
 export function register(program: Command) {
   program
     .command('calendar-sync [days]')
-    .description('sync myges calendar with Google Calendar')
     .option('-r, --reset_credentials', 'reset google api credentials')
     .option('-c, --reset_calendar', 'reset google calendar id')
+    .description('sync myges calendar with Google Calendar')
     .action(errorHandler(action));
 }
 
@@ -75,6 +75,10 @@ async function action(days: string, options: CommandOptions) {
 
     if (agenda.length === 0) {
       console.log('Nothing to display in this dates range.');
+      console.log(
+        'Removing previous events on calendar in given date range...',
+      );
+      removeEvents(start, end, calendarId, credentials);
       return;
     }
 
