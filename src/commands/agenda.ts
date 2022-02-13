@@ -142,8 +142,6 @@ async function action(week: string, options: CommandOptions) {
 
           let rooms = activity.modality === 'Distanciel' ? 'Remote' : 'Unknown';
 
-          console.log(activity.rooms);
-
           if (activity.rooms?.length > 0) {
             rooms = activity.rooms
               .map((room) => `${room.campus} ${room.name} (${room.floor})`)
