@@ -38,7 +38,7 @@
     "date-fns": "^2.28.0",
     "googleapis": "^95.0.0",
     "moment": "^2.29.1",
-    "update-notifier": "^5.1.0"
+    "update-notifier": "^6.0.2"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.0",
