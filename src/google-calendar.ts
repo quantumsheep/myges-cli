@@ -298,7 +298,7 @@ export async function getGoogleAccessToken(
   const { client_secret, client_id } = credentials.installed;
 
   const server = http.createServer();
-  await new Promise<void>((resolve) => server.listen(0, resolve));
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address() as AddressInfo;
 
   const oAuth2Client = new google.auth.OAuth2(
