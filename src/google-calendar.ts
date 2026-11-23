@@ -6,6 +6,7 @@ import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
 import { Config } from './config';
+import { randomBytes } from 'crypto';
 import http from 'http';
 import { AddressInfo, Socket } from 'net';
 import Calendar = calendar_v3.Calendar;
@@ -264,7 +265,10 @@ function getClient(
  * browser to it with the authorization code (loopback OAuth flow, required
  * since Google deprecated the out-of-band flow).
  */
-function waitForAuthorizationCode(server: http.Server): Promise<string> {
+function waitForAuthorizationCode(
+  server: http.Server,
+  state: string,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const sockets = new Set<Socket>();
     server.on('connection', (socket) => {
@@ -282,8 +286,12 @@ function waitForAuthorizationCode(server: http.Server): Promise<string> {
       const url = new URL(req.url, 'http://localhost');
       const code = url.searchParams.get('code');
       const error = url.searchParams.get('error');
+      const returnedState = url.searchParams.getAll('state');
 
-      if (error) {
+      if (returnedState.length !== 1 || returnedState[0] !== state) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Authorization failed: invalid state.');
+      } else if (error) {
         res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end(`Authorization failed: ${error}`);
         clearTimeout(timeout);
@@ -312,6 +320,7 @@ export async function getGoogleAccessToken(
 ): Promise<GoogleToken> {
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
   const { client_secret, client_id } = credentials.installed;
+  const state = randomBytes(32).toString('hex');
 
   const server = http.createServer();
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -326,6 +335,7 @@ export async function getGoogleAccessToken(
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
+    state,
   });
 
   console.log(
@@ -335,7 +345,7 @@ export async function getGoogleAccessToken(
   );
 
   try {
-    const code = await waitForAuthorizationCode(server);
+    const code = await waitForAuthorizationCode(server, state);
     const { tokens } = await oAuth2Client.getToken(code);
     if (!tokens) {
       throw new Error(
