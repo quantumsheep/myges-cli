@@ -7,7 +7,7 @@ import colors from 'colors';
 import { getCampusLocation } from './campus-location';
 import { Config } from './config';
 import http from 'http';
-import { AddressInfo } from 'net';
+import { AddressInfo, Socket } from 'net';
 import Calendar = calendar_v3.Calendar;
 
 import Schema$Events = calendar_v3.Schema$Events;
@@ -266,26 +266,42 @@ function getClient(
  */
 function waitForAuthorizationCode(server: http.Server): Promise<string> {
   return new Promise((resolve, reject) => {
+    const sockets = new Set<Socket>();
+    server.on('connection', (socket) => {
+      sockets.add(socket);
+      socket.on('close', () => sockets.delete(socket));
+    });
+
+    const timeout = setTimeout(() => {
+      server.close();
+      sockets.forEach((socket) => socket.destroy());
+      reject(new Error('Google authorization timed out after 5 minutes'));
+    }, 5 * 60 * 1000);
+
     server.on('request', (req, res) => {
       const url = new URL(req.url, 'http://localhost');
       const code = url.searchParams.get('code');
       const error = url.searchParams.get('error');
 
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      if (code) {
+      if (error) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`Authorization failed: ${error}`);
+        clearTimeout(timeout);
+        server.close();
+        reject(new Error(`Google authorization failed: ${error}`));
+      } else if (code) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(
           '<h1>Authorization received!</h1><p>You can close this tab and go back to the terminal.</p>',
         );
+        clearTimeout(timeout);
         server.close();
         resolve(code);
       } else {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(
           '<h1>Authorization failed.</h1><p>Go back to the terminal and try again.</p>',
         );
-        if (error) {
-          server.close();
-          reject(new Error(`Google authorization failed: ${error}`));
-        }
       }
     });
   });
