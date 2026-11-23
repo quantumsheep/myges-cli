@@ -6,7 +6,8 @@ import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
 import { Config } from './config';
-import inquirer from 'inquirer';
+import http from 'http';
+import { AddressInfo } from 'net';
 import Calendar = calendar_v3.Calendar;
 
 import Schema$Events = calendar_v3.Schema$Events;
@@ -252,42 +253,42 @@ function getClient(
   token: GoogleToken,
 ): OAuth2Client {
   const { client_secret, client_id } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    'urn:ietf:wg:oauth:2.0:oob',
-  );
+  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret);
 
   oAuth2Client.setCredentials(token);
   return oAuth2Client;
 }
 
-async function promptGoogleAccessToken(
-  authUrl: string,
-  oAuth2Client: OAuth2Client,
-) {
-  const { token_code } = await inquirer.prompt([
-    {
-      message:
-        "Authorize this app by visiting this url and retrieving authorization code : \n'" +
-        authUrl +
-        "'\nPast authorization code -> ",
-      name: 'token_code',
-    },
-  ]);
+/**
+ * Starts a local HTTP server and waits for Google to redirect the user's
+ * browser to it with the authorization code (loopback OAuth flow, required
+ * since Google deprecated the out-of-band flow).
+ */
+function waitForAuthorizationCode(server: http.Server): Promise<string> {
+  return new Promise((resolve, reject) => {
+    server.on('request', (req, res) => {
+      const url = new URL(req.url, 'http://localhost');
+      const code = url.searchParams.get('code');
+      const error = url.searchParams.get('error');
 
-  try {
-    const { tokens } = await oAuth2Client.getToken(token_code);
-    if (!tokens) {
-      throw new Error(
-        'An error has occurred when retrieving Google API authorization code',
-      );
-    }
-    return tokens;
-  } catch (e) {
-    console.error(e.message);
-    return promptGoogleAccessToken(authUrl, oAuth2Client);
-  }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      if (code) {
+        res.end(
+          '<h1>Authorization received!</h1><p>You can close this tab and go back to the terminal.</p>',
+        );
+        server.close();
+        resolve(code);
+      } else {
+        res.end(
+          '<h1>Authorization failed.</h1><p>Go back to the terminal and try again.</p>',
+        );
+        if (error) {
+          server.close();
+          reject(new Error(`Google authorization failed: ${error}`));
+        }
+      }
+    });
+  });
 }
 
 export async function getGoogleAccessToken(
@@ -295,10 +296,15 @@ export async function getGoogleAccessToken(
 ): Promise<GoogleToken> {
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
   const { client_secret, client_id } = credentials.installed;
+
+  const server = http.createServer();
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const { port } = server.address() as AddressInfo;
+
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
-    'urn:ietf:wg:oauth:2.0:oob',
+    `http://localhost:${port}`,
   );
 
   const authUrl = oAuth2Client.generateAuthUrl({
@@ -306,11 +312,23 @@ export async function getGoogleAccessToken(
     scope: SCOPES,
   });
 
+  console.log(
+    "Authorize this app by visiting this url (the authorization code will be retrieved automatically) :\n'" +
+      authUrl +
+      "'\nWaiting for authorization...",
+  );
+
   try {
-    return await promptGoogleAccessToken(authUrl, oAuth2Client);
+    const code = await waitForAuthorizationCode(server);
+    const { tokens } = await oAuth2Client.getToken(code);
+    if (!tokens) {
+      throw new Error(
+        'An error has occurred when retrieving Google API authorization code',
+      );
+    }
+    return tokens;
   } catch (e) {
-    throw new Error(
-      `Prompt couldn't be rendered in the current environment: ${e}`,
-    );
+    server.close();
+    throw new Error(`Google authorization failed: ${e.message ?? e}`);
   }
 }
