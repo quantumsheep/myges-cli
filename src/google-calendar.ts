@@ -283,7 +283,7 @@ function waitForAuthorizationCode(
     }, 5 * 60 * 1000);
 
     server.on('request', (req, res) => {
-      const url = new URL(req.url, 'http://localhost');
+      const url = new URL(req.url, 'http://127.0.0.1');
       const code = url.searchParams.get('code');
       const error = url.searchParams.get('error');
       const returnedState = url.searchParams.getAll('state');
