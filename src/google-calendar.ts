@@ -7,10 +7,11 @@ import { styleText } from "node:util";
 import { getCampusLocation } from "@/campus-location.js";
 import { randomBytes } from "node:crypto";
 import http from "node:http";
+import { setTimeout as sleep } from "node:timers/promises";
+import { printError } from "@/commands-base.js";
 import type { AddressInfo, Socket } from "node:net";
 import Calendar = calendar_v3.Calendar;
 
-import Schema$Events = calendar_v3.Schema$Events;
 import Schema$Event = calendar_v3.Schema$Event;
 
 type OAuth2Client = Auth.OAuth2Client;
@@ -28,190 +29,139 @@ export interface GoogleConfig {
   google_api_token: GoogleToken;
 }
 
-type EventsCallback = (
-  err: Error | null,
-  res: { data: Schema$Events } | null | undefined,
-  calendar: Calendar,
-  calendarId: string,
-) => void;
+/** Pause between two API calls, to stay under the Google rate limit. */
+const API_CALL_SPACING_MS = 500;
 
-const multiBar = new cliProgress.MultiBar({
-  format: " {task} |" + styleText("blue", "{bar}") + "| {percentage}% || {value}/{total}",
-  barCompleteChar: "\u2588",
-  barIncompleteChar: "\u2591",
-  hideCursor: true,
-});
-let eventAdded = true;
-let eventRemoved = true;
-const taskComplete = () => {
-  if (eventAdded && eventRemoved) {
-    multiBar.stop();
-  }
-};
-
-export function readEvents(
-  startTime: Date,
-  endTime: Date,
-  calendarId: string,
-  config: GoogleConfig,
-) {
-  const googleClient = getClient(config.google_api_credentials, config.google_api_token);
-  retrieveEvents(googleClient, calendarId, startTime, endTime, displayEvents);
-}
-
-export function removeEvents(
-  startTime: Date,
-  endTime: Date,
-  calendarId: string,
-  config: GoogleConfig,
-) {
-  const googleClient = getClient(config.google_api_credentials, config.google_api_token);
-  retrieveEvents(googleClient, calendarId, startTime, endTime, deleteEvents);
-}
-
-export function pushToCalendar(events: AgendaItem[], calendarId: string, config: GoogleConfig) {
-  const googleClient = getClient(config.google_api_credentials, config.google_api_token);
-  const googleEvents = events.map((event) => createEvent(event));
-  addEvents(googleClient, calendarId, googleEvents);
-}
-
-function retrieveEvents(
-  auth: OAuth2Client,
-  calendarId: string,
-  startTime: Date,
-  endTime: Date,
-  callback: EventsCallback,
-) {
-  const calendar: Calendar = google.calendar({
+export function createCalendar(config: GoogleConfig): Calendar {
+  return google.calendar({
     version: "v3",
-    auth,
+    auth: getClient(config.google_api_credentials, config.google_api_token),
     http2: true,
   });
-  calendar.events.list(
-    {
+}
+
+/** Deletes the events between the two dates. Returns the number of failed deletions. */
+export async function removeEvents(
+  startTime: Date,
+  endTime: Date,
+  calendarId: string,
+  config: GoogleConfig,
+  calendar = createCalendar(config),
+  spacingMs = API_CALL_SPACING_MS,
+) {
+  const events = await retrieveEvents(calendar, calendarId, startTime, endTime);
+  if (events.length === 0) {
+    console.log("No events to delete found.");
+    return 0;
+  }
+  return runEach(events, "Removing old events", spacingMs, (event) =>
+    calendar.events.delete({ calendarId, eventId: event.id ?? undefined }),
+  );
+}
+
+/** Inserts the agenda items as events. Returns the number of failed insertions. */
+export async function pushToCalendar(
+  events: AgendaItem[],
+  calendarId: string,
+  config: GoogleConfig,
+  calendar = createCalendar(config),
+  spacingMs = API_CALL_SPACING_MS,
+) {
+  return runEach(events.map(createEvent), "Adding new events  ", spacingMs, (event) =>
+    calendar.events.insert({ calendarId, requestBody: event }),
+  );
+}
+
+/**
+ * Replaces the events between the two dates by the agenda items: the old
+ * events are all removed before the first insert, so the new events are kept.
+ * Returns the number of failed API calls.
+ */
+export async function syncCalendar(
+  events: AgendaItem[],
+  startTime: Date,
+  endTime: Date,
+  calendarId: string,
+  config: GoogleConfig,
+  calendar = createCalendar(config),
+  spacingMs = API_CALL_SPACING_MS,
+) {
+  const removeFailures = await removeEvents(
+    startTime,
+    endTime,
+    calendarId,
+    config,
+    calendar,
+    spacingMs,
+  );
+  if (events.length === 0) {
+    return removeFailures;
+  }
+  return removeFailures + (await pushToCalendar(events, calendarId, config, calendar, spacingMs));
+}
+
+async function retrieveEvents(
+  calendar: Calendar,
+  calendarId: string,
+  startTime: Date,
+  endTime: Date,
+): Promise<Schema$Event[]> {
+  const events: Schema$Event[] = [];
+  let pageToken: string | undefined;
+  do {
+    const res = await calendar.events.list({
       calendarId,
       timeMin: startTime.toISOString(),
       timeMax: endTime.toISOString(),
       singleEvents: true,
       orderBy: "startTime",
-    },
-    (err, res) => {
-      callback(err, res, calendar, calendarId);
-    },
-  );
-}
-
-function addEvents(auth: OAuth2Client, calendarId: string, events: Schema$Event[]) {
-  const calendar: Calendar = google.calendar({
-    version: "v3",
-    auth,
-    http2: true,
-  });
-  eventAdded = false;
-  const progressBar = multiBar.create(events.length, 0, {
-    task: "Adding new events  ",
-  });
-  const tasks = events.map(
-    (event, i) =>
-      new Promise((resolve, reject) => {
-        setTimeout(
-          () => {
-            calendar.events.insert(
-              {
-                calendarId,
-                requestBody: event,
-              },
-              { http2: true },
-              (err, res) => {
-                progressBar.increment();
-                if (err) {
-                  console.error(err);
-                  reject(err);
-                } else {
-                  resolve(res);
-                }
-              },
-            );
-          },
-          500 * (i + 1),
-        );
-      }),
-  );
-  void Promise.all(tasks).finally(() => {
-    // progressBar.stop();
-    eventAdded = true;
-    taskComplete();
-  });
-}
-
-function displayEvents(err: Error | null, res: { data: Schema$Events } | null | undefined) {
-  if (err) {
-    console.log(`The API returned an error: ${String(err)}`);
-    return;
-  }
-  const events = res?.data.items ?? [];
-  if (events.length) {
-    events.forEach((event) => {
-      const start = event.start?.dateTime ?? event.start?.date;
-      const end = event.end?.dateTime ?? event.end?.date;
-      console.log(`${String(start)}->${String(end)} - ${String(event.summary)}`);
+      pageToken,
     });
-  } else {
-    console.log("No upcoming events found.");
-  }
+    events.push(...(res.data.items ?? []));
+    pageToken = res.data.nextPageToken ?? undefined;
+  } while (pageToken);
+  return events;
 }
 
-function deleteEvents(
-  errP: Error | null,
-  resP: { data: Schema$Events } | null | undefined,
-  calendar: Calendar,
-  calendarId: string,
+/**
+ * Runs `call` for each item, one every `spacingMs`, with a progress bar.
+ * A failed call does not stop the others: the failures are printed at the
+ * end and their number is returned.
+ */
+async function runEach<T>(
+  items: T[],
+  task: string,
+  spacingMs: number,
+  call: (item: T) => Promise<unknown>,
 ) {
-  if (errP) {
-    console.error(`The API returned an error: ${String(errP)}`);
-    return;
-  }
-  const events = resP?.data.items ?? [];
-  if (events.length) {
-    eventRemoved = false;
-    const progressBar = multiBar.create(events.length, 0, {
-      task: "Removing old events",
-    });
-    const tasks = events.map(
-      (event, i) =>
-        new Promise((resolve, reject) => {
-          setTimeout(
-            () => {
-              calendar.events.delete(
-                {
-                  calendarId,
-                  eventId: event.id ?? undefined,
-                },
-                { http2: true },
-                (err, res) => {
-                  progressBar.increment();
-                  if (err) {
-                    console.error(err);
-                    reject(err);
-                  } else {
-                    resolve(res);
-                  }
-                },
-              );
-            },
-            500 * (i + 1),
-          );
-        }),
-    );
+  const progressBar = new cliProgress.SingleBar({
+    format: " {task} |" + styleText("blue", "{bar}") + "| {percentage}% || {value}/{total}",
+    barCompleteChar: "\u2588",
+    barIncompleteChar: "\u2591",
+    hideCursor: true,
+  });
+  progressBar.start(items.length, 0, { task });
 
-    void Promise.all(tasks).finally(() => {
-      // progressBar.stop();
-      eventRemoved = true;
-      taskComplete();
-    });
-  } else {
-    console.log("No events to delete found.");
+  const results = await Promise.allSettled(
+    items.map(async (item, i) => {
+      await sleep(spacingMs * (i + 1));
+      try {
+        return await call(item);
+      } finally {
+        progressBar.increment();
+      }
+    }),
+  );
+  progressBar.stop();
+
+  const failures = results.filter((result) => result.status === "rejected");
+  failures.forEach((failure) => {
+    printError(failure.reason);
+  });
+  if (failures.length > 0) {
+    console.error(`${task.trim()}: ${failures.length} of ${items.length} failed.`);
   }
+  return failures.length;
 }
 
 function getEventDescription(agendaItem: AgendaItem) {

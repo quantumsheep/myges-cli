@@ -4,6 +4,7 @@ import readline from "readline";
 import type { GlobalCommandOptions } from "@/commands-base.js";
 import { errorHandler, printError } from "@/commands-base.js";
 import * as configurator from "@/config.js";
+import { formatDateTime } from "@/dates.js";
 import { GesAPI } from "@/ges-api.js";
 import type { ProjectGroupMessage } from "@/interfaces/api.interface.js";
 import { getProject } from "@/commands/projects/show.js";
@@ -50,24 +51,7 @@ async function action(id: string | undefined, options: CommandOptions) {
   const messages = await api.getProjectGroupMessages(groupId);
 
   function display_message(message: ProjectGroupMessage) {
-    const date = new Date(message.date);
-    const date_str = `${date.getDate().toString().padStart(2, "0")}/${date
-      .getMonth()
-      .toString()
-      .padStart(2, "0")}/${date.getFullYear()} ${date
-      .getHours()
-      .toString()
-      .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-
-    let prefix = "";
-
-    if (message.uid === uid) {
-      prefix = styleText("gray", `[${date_str}] You`);
-    } else {
-      prefix = styleText("cyan", `[${date_str}] ${message.firstname} ${message.name}`);
-    }
-
-    console.log(`${prefix}${styleText("gray", ":")} ${message.message}`);
+    console.log(formatMessage(message, uid));
   }
 
   messages.forEach(display_message);
@@ -108,4 +92,15 @@ async function action(id: string | undefined, options: CommandOptions) {
   rl.on("line", (message) => void send_message(message));
 
   await update_messages();
+}
+
+/** "[04/09/1986, 20:30] Firstname Name: message", or "You" for the user's own messages. */
+export function formatMessage(message: ProjectGroupMessage, uid: number) {
+  const date = formatDateTime(message.date);
+  const prefix =
+    message.uid === uid
+      ? styleText("gray", `[${date}] You`)
+      : styleText("cyan", `[${date}] ${message.firstname} ${message.name}`);
+
+  return `${prefix}${styleText("gray", ":")} ${message.message}`;
 }
