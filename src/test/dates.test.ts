@@ -10,7 +10,7 @@ import {
   formatWeekdayDate,
   weekMiddle,
   weekRange,
-} from "#src/dates.js";
+} from "@/dates.js";
 
 // Local time zone used by the expected values below.
 process.env.TZ = "Europe/Paris";

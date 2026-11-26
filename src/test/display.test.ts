@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import * as display from "#src/display.js";
+import * as display from "@/display.js";
 
 let output: string;
 const write = process.stdout.write.bind(process.stdout);

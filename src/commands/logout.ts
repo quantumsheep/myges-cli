@@ -1,7 +1,7 @@
 import type { Command } from "commander";
-import type { GlobalCommandOptions } from "#src/commands-base.js";
-import { errorHandler, printError } from "#src/commands-base.js";
-import * as configurator from "#src/config.js";
+import type { GlobalCommandOptions } from "@/commands-base.js";
+import { errorHandler, printError } from "@/commands-base.js";
+import * as configurator from "@/config.js";
 
 export function register(program: Command) {
   program

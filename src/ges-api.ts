@@ -1,4 +1,4 @@
-import type { AgendaItem } from "#src/interfaces/agenda.interface.js";
+import type { AgendaItem } from "@/interfaces/agenda.interface.js";
 import type {
   Absence,
   Course,
@@ -6,8 +6,8 @@ import type {
   Profile,
   ProjectGroupMessage,
   Step,
-} from "#src/interfaces/api.interface.js";
-import type { Project } from "#src/interfaces/project.interface.js";
+} from "@/interfaces/api.interface.js";
+import type { Project } from "@/interfaces/project.interface.js";
 
 export interface AccessToken {
   access_token: string;

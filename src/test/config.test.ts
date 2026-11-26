@@ -9,7 +9,7 @@ const home = await mkdtemp(path.join(tmpdir(), "myges-config-test-"));
 process.env.HOME = home;
 process.env.USERPROFILE = home;
 
-const configurator = await import("#src/config.js");
+const configurator = await import("@/config.js");
 const configPath = path.join(home, ".myges");
 
 before(async () => {

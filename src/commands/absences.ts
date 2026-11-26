@@ -1,11 +1,11 @@
 import type { Command } from "commander";
 import inquirer from "inquirer";
-import { formatDateTime } from "#src/dates.js";
-import type { GlobalCommandOptions } from "#src/commands-base.js";
-import { errorHandler, printError } from "#src/commands-base.js";
-import * as configurator from "#src/config.js";
-import * as display from "#src/display.js";
-import { GesAPI } from "#src/ges-api.js";
+import { formatDateTime } from "@/dates.js";
+import type { GlobalCommandOptions } from "@/commands-base.js";
+import { errorHandler, printError } from "@/commands-base.js";
+import * as configurator from "@/config.js";
+import * as display from "@/display.js";
+import { GesAPI } from "@/ges-api.js";
 
 export function register(program: Command) {
   program

@@ -2,10 +2,10 @@ import { promises as fs } from "node:fs";
 import inquirer from "inquirer";
 import { homedir } from "node:os";
 import path from "node:path";
-import type { AccessToken, GesAuthenticationToken } from "#src/ges-api.js";
-import { GesAPI } from "#src/ges-api.js";
-import type { GoogleConfig, GoogleCredentials, GoogleToken } from "#src/google-calendar.js";
-import { getGoogleAccessToken } from "#src/google-calendar.js";
+import type { AccessToken, GesAuthenticationToken } from "@/ges-api.js";
+import { GesAPI } from "@/ges-api.js";
+import type { GoogleConfig, GoogleCredentials, GoogleToken } from "@/google-calendar.js";
+import { getGoogleAccessToken } from "@/google-calendar.js";
 
 const config_path = path.resolve(homedir(), ".myges");
 
