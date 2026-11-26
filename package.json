@@ -1,21 +1,31 @@
 {
   "name": "myges",
-  "version": "4.7.1",
-  "description": "",
+  "version": "5.0.0",
+  "description": "Command line interface for MyGES (Réseau GES): agenda, grades, absences, courses, projects and Google Calendar sync",
+  "type": "module",
   "keywords": [],
   "main": "dist/index.js",
-  "scripts": {
-    "start": "node dist/cli.js",
-    "dev": "nodemon .",
-    "build": "tsc",
-    "lint": "eslint src/**/*.ts --fix",
-    "prepare": "npm run build"
-  },
-  "files": [
-    "dist"
-  ],
   "bin": {
     "myges": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "!dist/test"
+  ],
+  "scripts": {
+    "start": "node dist/cli.js",
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "contributors": [
     {
@@ -25,33 +35,27 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/quantumsheep/myges-cli.git"
+    "url": "git+https://github.com/quantumsheep/myges-cli.git"
   },
   "author": "Nathanael Demacon <nathanael.dmc@outlook.fr>",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.25.0",
-    "cli-progress": "^3.10.0",
-    "colors": "^1.4.0",
-    "commander": "^9.0.0",
-    "inquirer": "^8.2.0",
-    "date-fns": "^2.28.0",
-    "googleapis": "^95.0.0",
-    "moment": "^2.29.1",
-    "update-notifier": "^5.1.0"
+    "cli-progress": "^3.12.0",
+    "commander": "^15.1.0",
+    "date-fns": "^4.4.0",
+    "googleapis": "^190.0.0",
+    "inquirer": "^14.3.1",
+    "update-notifier": "^7.3.1"
   },
   "devDependencies": {
-    "@types/inquirer": "^8.2.0",
-    "@types/update-notifier": "^5.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.11.0",
-    "@typescript-eslint/parser": "^5.11.0",
-    "eslint": "^8.9.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "@types/cli-progress": "^3.9.2",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-prettier": "^4.0.0",
-    "prettier": "^2.5.1",
-    "typescript": "^4.5.5"
+    "@types/cli-progress": "^3.11.6",
+    "@types/node": "^26.6.11",
+    "@types/update-notifier": "^6.0.9",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0"
   }
 }

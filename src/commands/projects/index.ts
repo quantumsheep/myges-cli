@@ -1,14 +1,14 @@
-import { Command } from 'commander';
-import * as chatSubcommand from './chat';
-import * as groupsSubcommand from './groups';
-import * as joinSubcommand from './join';
-import * as lsSubcommand from './ls';
-import * as quitSubcommand from './quit';
-import * as showSubcommand from './show';
-import * as stepsSubcommand from './steps';
+import type { Command } from "commander";
+import * as chatSubcommand from "./chat.js";
+import * as groupsSubcommand from "./groups.js";
+import * as joinSubcommand from "./join.js";
+import * as lsSubcommand from "./ls.js";
+import * as quitSubcommand from "./quit.js";
+import * as showSubcommand from "./show.js";
+import * as stepsSubcommand from "./steps.js";
 
 export function register(program: Command) {
-  const command = program.command('projects').description('manage projects');
+  const command = program.command("projects").description("manage projects");
 
   chatSubcommand.register(command);
   groupsSubcommand.register(command);

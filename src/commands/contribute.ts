@@ -1,29 +1,26 @@
-import colors from 'colors';
-import { Command } from 'commander';
-import { errorHandler } from '../commands-base';
-import * as display from '../display';
+import { styleText } from "node:util";
+import type { Command } from "commander";
+import { errorHandler } from "../commands-base.js";
+import * as display from "../display.js";
 
 export function register(program: Command) {
-  program
-    .command('contribute')
-    .description('show useful links')
-    .action(errorHandler(action));
+  program.command("contribute").description("show useful links").action(errorHandler(action));
 }
 
-async function action() {
+function action() {
   display.table(
     [
       {
-        Name: colors.cyan('Réseau GES (GHG Network)'),
-        Value: 'http://www.reseau-ges.fr',
+        Name: styleText("cyan", "Réseau GES (GHG Network)"),
+        Value: "http://www.reseau-ges.fr",
       },
       {
-        Name: colors.cyan('GitHub repository'),
-        Value: 'https://github.com/quantumsheep/myges-cli',
+        Name: styleText("cyan", "GitHub repository"),
+        Value: "https://github.com/quantumsheep/myges-cli",
       },
       {
-        Name: colors.cyan('Issues'),
-        Value: 'https://github.com/quantumsheep/myges-cli/issues',
+        Name: styleText("cyan", "Issues"),
+        Value: "https://github.com/quantumsheep/myges-cli/issues",
       },
     ],
     false,

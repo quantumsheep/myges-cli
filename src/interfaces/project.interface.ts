@@ -16,7 +16,7 @@ export interface ProjectGroup {
   subject_validated: boolean;
   teacher_comment?: string;
   teacher_intern_comment?: string;
-  project_group_students: ProjectGroupStudent[];
+  project_group_students: ProjectGroupStudent[] | null;
 }
 
 export interface ProjectFile {

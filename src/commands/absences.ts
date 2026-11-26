@@ -1,41 +1,40 @@
-import { Command } from 'commander';
-import inquirer from 'inquirer';
-import moment from 'moment';
-import { errorHandler, GlobalCommandOptions } from '../commands-base';
-import * as configurator from '../config';
-import * as display from '../display';
-import { GesAPI } from '../ges-api';
+import type { Command } from "commander";
+import inquirer from "inquirer";
+import { formatDateTime } from "../dates.js";
+import type { GlobalCommandOptions } from "../commands-base.js";
+import { errorHandler, printError } from "../commands-base.js";
+import * as configurator from "../config.js";
+import * as display from "../display.js";
+import { GesAPI } from "../ges-api.js";
 
 export function register(program: Command) {
   program
-    .command('absences [year]')
-    .option('-r, --raw', 'output the raw data')
-    .description('list absences')
+    .command("absences [year]")
+    .option("-r, --raw", "output the raw data")
+    .description("list absences")
     .action(errorHandler(action));
 }
 
 interface CommandOptions extends GlobalCommandOptions {
-  debug: boolean;
-  raw: boolean;
+  raw?: boolean;
 }
 
-async function action(year: string, options: CommandOptions) {
+async function action(year: string | undefined, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
     const api = new GesAPI(config);
 
     if (!year) {
-      const answers = await inquirer.prompt([
+      const answers = await inquirer.prompt<{ year: number }>([
         {
-          message: 'Choose a year',
-          name: 'year',
-          type: 'list',
+          message: "Choose a year",
+          name: "year",
+          type: "select",
           choices: await api.getYears(),
         },
       ]);
 
-      // eslint-disable-next-line no-param-reassign
-      year = answers.year;
+      year = String(answers.year);
     }
 
     const absences = await api.getAbsences(year);
@@ -43,23 +42,19 @@ async function action(year: string, options: CommandOptions) {
     if (options.raw) {
       console.log(JSON.stringify(absences));
     } else if (!absences) {
-      console.log('Nothing to display.');
+      console.log("Nothing to display.");
     } else {
       display.table(
         absences.map((absence) => ({
           Year: absence.year,
-          Date: moment(absence.date).format('DD/MM/YYYY, HH:mm'),
-          'Course name': absence.course_name,
+          Date: formatDateTime(absence.date),
+          "Course name": absence.course_name,
           Justified: absence.justified,
           Trimester: absence.trimester_name,
         })),
       );
     }
   } catch (e) {
-    if (options.debug) {
-      console.error(e);
-    } else {
-      console.error(e.message);
-    }
+    printError(e, options.debug);
   }
 }

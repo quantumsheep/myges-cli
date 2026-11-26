@@ -1,12 +1,13 @@
-import { Command } from 'commander';
-import { errorHandler, GlobalCommandOptions } from '../../commands-base';
-import * as display from '../../display';
-import { getProject } from './show';
+import type { Command } from "commander";
+import type { GlobalCommandOptions } from "../../commands-base.js";
+import { errorHandler } from "../../commands-base.js";
+import * as display from "../../display.js";
+import { getProject } from "./show.js";
 
 export function register(program: Command) {
   program
-    .command('groups [id]')
-    .option('-y, --year <year>', 'pre-select a year')
+    .command("groups [id]")
+    .option("-y, --year <year>", "pre-select a year")
     .action(errorHandler(action));
 }
 
@@ -15,16 +16,16 @@ interface CommandOptions extends GlobalCommandOptions {
   year?: string;
 }
 
-async function action(id: string, options: CommandOptions) {
+async function action(id: string | undefined, options: CommandOptions) {
   const project = await getProject(id, options);
 
   display.table(
     project.groups.map((group) => ({
       id: group.project_group_id,
       name: group.group_name,
-      ...(group.project_group_students || [])
+      ...(group.project_group_students ?? [])
         .map((student) => `${student.firstname} ${student.name}`)
-        .reduce((acc, v, i) => {
+        .reduce<Record<string, string>>((acc, v, i) => {
           acc[`Student ${i + 1}`] = v;
           return acc;
         }, {}),

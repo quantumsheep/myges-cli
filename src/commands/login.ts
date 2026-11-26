@@ -1,17 +1,13 @@
-import { Command } from 'commander';
-import { errorHandler, GlobalCommandOptions } from '../commands-base';
-import * as configurator from '../config';
+import type { Command } from "commander";
+import type { GlobalCommandOptions } from "../commands-base.js";
+import { errorHandler, printError } from "../commands-base.js";
+import * as configurator from "../config.js";
 
 export function register(program: Command) {
-  program
-    .command('login')
-    .description('sign in to an account')
-    .action(errorHandler(action));
+  program.command("login").description("sign in to an account").action(errorHandler(action));
 }
 
-interface CommandOptions extends GlobalCommandOptions {
-  debug: boolean;
-}
+type CommandOptions = GlobalCommandOptions;
 
 async function action(options: CommandOptions) {
   try {
@@ -24,12 +20,8 @@ async function action(options: CommandOptions) {
       expires: Date.now() + parseInt(token.expires_in, 10) * 1000,
     });
 
-    console.log('Successfully logged in!');
+    console.log("Successfully logged in!");
   } catch (e) {
-    if (options.debug) {
-      console.error(e);
-    } else {
-      console.error(e.message);
-    }
+    printError(e, options.debug);
   }
 }

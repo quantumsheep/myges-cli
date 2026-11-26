@@ -1,39 +1,39 @@
-import { Command } from 'commander';
-import inquirer from 'inquirer';
-import { errorHandler, GlobalCommandOptions } from '../commands-base';
-import * as configurator from '../config';
-import * as display from '../display';
-import { GesAPI } from '../ges-api';
+import type { Command } from "commander";
+import inquirer from "inquirer";
+import type { GlobalCommandOptions } from "../commands-base.js";
+import { errorHandler, printError } from "../commands-base.js";
+import * as configurator from "../config.js";
+import * as display from "../display.js";
+import { GesAPI } from "../ges-api.js";
 
 export function register(program: Command) {
   program
-    .command('grades [year]')
-    .option('-r, --raw', 'output the raw data')
-    .description('list grades')
+    .command("grades [year]")
+    .option("-r, --raw", "output the raw data")
+    .description("list grades")
     .action(errorHandler(action));
 }
 
 interface CommandOptions extends GlobalCommandOptions {
-  debug: boolean;
-  raw: boolean;
+  raw?: boolean;
 }
 
-async function action(year: string, options: CommandOptions) {
+async function action(year: string | undefined, options: CommandOptions) {
   try {
     const config = await configurator.load(true);
     const api = new GesAPI(config);
 
     if (!year) {
-      const answers = await inquirer.prompt([
+      const answers = await inquirer.prompt<{ year: number }>([
         {
-          message: 'Choose a year',
-          name: 'year',
-          type: 'list',
+          message: "Choose a year",
+          name: "year",
+          type: "select",
           choices: await api.getYears(),
         },
       ]);
 
-      year = answers.year;
+      year = String(answers.year);
     }
 
     const grades = await api.getGrades(year);
@@ -41,23 +41,18 @@ async function action(year: string, options: CommandOptions) {
     if (options.raw) {
       console.log(JSON.stringify(grades));
     } else if (!grades) {
-      console.log('Nothing to display.');
+      console.log("Nothing to display.");
     } else {
       const trimesters = [...new Set(grades.map((grade) => grade.trimester))]
         .sort()
         .map((trimester) => {
-          const trimester_grades = grades.filter(
-            (grade) => grade.trimester === trimester,
-          );
+          const trimester_grades = grades.filter((grade) => grade.trimester === trimester);
 
-          const cc = Math.max(
-            ...trimester_grades.map((grade) => grade.grades.length),
-          );
+          const cc = Math.max(...trimester_grades.map((grade) => grade.grades.length));
 
           const ccs = trimester_grades.map((grade) =>
-            [...Array(cc).keys()].reduce((o, i) => {
-              o[`CC${i + 1}`] =
-                grade.grades.length > i ? grade.grades[i] : null;
+            [...Array(cc).keys()].reduce<Record<string, number | null>>((o, i) => {
+              o[`CC${i + 1}`] = grade.grades.length > i ? grade.grades[i] : null;
               return o;
             }, {}),
           );
@@ -73,11 +68,11 @@ async function action(year: string, options: CommandOptions) {
               Trimester: `${grade.trimester_name} (${grade.trimester})`,
               Teacher: `${grade.teacher_civility} ${grade.teacher_last_name} ${grade.teacher_first_name}`,
               Course: grade.course,
-              'Coef. / ECTS': grade.coef || grade.ects,
+              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- a 0 or empty coefficient falls back to the ECTS
+              "Coef. / ECTS": grade.coef || grade.ects,
               ...ccs[i],
               Exam: grade.exam,
-              Average:
-                average !== null ? Math.floor(average * 100) / 100 : null,
+              Average: average !== null ? Math.floor(average * 100) / 100 : null,
             };
           });
 
@@ -85,7 +80,7 @@ async function action(year: string, options: CommandOptions) {
           const averages = trimester_grades_formated
             .map((grade) => {
               if (grade.Average !== null) {
-                const coef = parseFloat(grade['Coef. / ECTS']) || 1;
+                const coef = parseFloat(String(grade["Coef. / ECTS"])) || 1;
 
                 count += coef;
                 return grade.Average * coef;
@@ -95,23 +90,20 @@ async function action(year: string, options: CommandOptions) {
             })
             .filter((average) => average !== null);
 
-          const average =
-            count > 0 ? averages.reduce((a, b) => a + b, 0) / count || 0 : 0;
-          trimester_grades_formated.push({
-            Course: 'GLOBAL AVERAGE',
+          const rows: Record<string, unknown>[] = trimester_grades_formated;
+
+          const average = count > 0 ? averages.reduce((a, b) => a + b, 0) / count || 0 : 0;
+          rows.push({
+            Course: "GLOBAL AVERAGE",
             Average: Math.floor(average * 100) / 100,
           });
 
-          return trimester_grades_formated;
+          return rows;
         });
 
       display.multiple(trimesters);
     }
   } catch (e) {
-    if (options.debug) {
-      console.error(e);
-    } else {
-      console.error(e.message);
-    }
+    printError(e, options.debug);
   }
 }
