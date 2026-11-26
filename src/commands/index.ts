@@ -1,14 +1,14 @@
 import type { Command } from "commander";
-import * as absencesCommand from "./absences.js";
-import * as agendaCommand from "./agenda.js";
-import * as calendarCommand from "./calendar-sync.js";
-import * as contributeCommand from "./contribute.js";
-import * as coursesCommand from "./courses.js";
-import * as gradesCommand from "./grades.js";
-import * as loginCommand from "./login.js";
-import * as logoutCommand from "./logout.js";
-import * as projectsCommand from "./projects/index.js";
-import * as requestCommand from "./request.js";
+import * as absencesCommand from "#src/commands/absences.js";
+import * as agendaCommand from "#src/commands/agenda.js";
+import * as calendarCommand from "#src/commands/calendar-sync.js";
+import * as contributeCommand from "#src/commands/contribute.js";
+import * as coursesCommand from "#src/commands/courses.js";
+import * as gradesCommand from "#src/commands/grades.js";
+import * as loginCommand from "#src/commands/login.js";
+import * as logoutCommand from "#src/commands/logout.js";
+import * as projectsCommand from "#src/commands/projects/index.js";
+import * as requestCommand from "#src/commands/request.js";
 
 export function register(program: Command) {
   absencesCommand.register(program);

@@ -1,12 +1,12 @@
 import { styleText } from "node:util";
 import type { Command } from "commander";
 import readline from "readline";
-import type { GlobalCommandOptions } from "../../commands-base.js";
-import { errorHandler, printError } from "../../commands-base.js";
-import * as configurator from "../../config.js";
-import { GesAPI } from "../../ges-api.js";
-import type { ProjectGroupMessage } from "../../interfaces/api.interface.js";
-import { getProject } from "./show.js";
+import type { GlobalCommandOptions } from "#src/commands-base.js";
+import { errorHandler, printError } from "#src/commands-base.js";
+import * as configurator from "#src/config.js";
+import { GesAPI } from "#src/ges-api.js";
+import type { ProjectGroupMessage } from "#src/interfaces/api.interface.js";
+import { getProject } from "#src/commands/projects/show.js";
 
 export function register(program: Command) {
   program

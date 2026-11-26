@@ -1,12 +1,12 @@
 import type { Command } from "commander";
 import { addDays, endOfDay, format, startOfDay } from "date-fns";
 import inquirer from "inquirer";
-import type { GlobalCommandOptions } from "../commands-base.js";
-import { errorHandler, printError } from "../commands-base.js";
-import * as configurator from "../config.js";
-import { GesAPI } from "../ges-api.js";
-import type { GoogleConfig } from "../google-calendar.js";
-import { pushToCalendar, removeEvents } from "../google-calendar.js";
+import type { GlobalCommandOptions } from "#src/commands-base.js";
+import { errorHandler, printError } from "#src/commands-base.js";
+import * as configurator from "#src/config.js";
+import { GesAPI } from "#src/ges-api.js";
+import type { GoogleConfig } from "#src/google-calendar.js";
+import { pushToCalendar, removeEvents } from "#src/google-calendar.js";
 
 export function register(program: Command) {
   program

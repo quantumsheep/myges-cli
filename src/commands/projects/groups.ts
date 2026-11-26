@@ -1,8 +1,8 @@
 import type { Command } from "commander";
-import type { GlobalCommandOptions } from "../../commands-base.js";
-import { errorHandler } from "../../commands-base.js";
-import * as display from "../../display.js";
-import { getProject } from "./show.js";
+import type { GlobalCommandOptions } from "#src/commands-base.js";
+import { errorHandler } from "#src/commands-base.js";
+import * as display from "#src/display.js";
+import { getProject } from "#src/commands/projects/show.js";
 
 export function register(program: Command) {
   program

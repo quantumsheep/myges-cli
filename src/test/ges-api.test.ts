@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, test } from "node:test";
-import { GesAPI, HttpError } from "../ges-api.js";
+import { GesAPI, HttpError } from "#src/ges-api.js";
 
 const realFetch = globalThis.fetch;
 let calls: { url: string; init: RequestInit }[] = [];

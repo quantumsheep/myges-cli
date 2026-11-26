@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import updateNotifier from "update-notifier";
-import * as commands from "./commands/index.js";
-import * as commandsBase from "./commands-base.js";
-import { pkg } from "./package-info.js";
+import * as commands from "#src/commands/index.js";
+import * as commandsBase from "#src/commands-base.js";
+import { pkg } from "#src/package-info.js";
 
 const notifier = updateNotifier({
   pkg,

@@ -1,4 +1,4 @@
-import { GesAPI } from "./ges-api.js";
+import { GesAPI } from "#src/ges-api.js";
 
-export * from "./ges-api.js";
+export * from "#src/ges-api.js";
 export default GesAPI;

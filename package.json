@@ -8,6 +8,9 @@
   "bin": {
     "myges": "dist/cli.js"
   },
+  "imports": {
+    "#src/*": "./dist/*"
+  },
   "files": [
     "dist",
     "!dist/test"

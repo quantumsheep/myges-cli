@@ -1,10 +1,10 @@
 import type { Command } from "commander";
 import inquirer from "inquirer";
-import type { GlobalCommandOptions } from "../../commands-base.js";
-import { errorHandler } from "../../commands-base.js";
-import * as configurator from "../../config.js";
-import { GesAPI } from "../../ges-api.js";
-import { getProject } from "./show.js";
+import type { GlobalCommandOptions } from "#src/commands-base.js";
+import { errorHandler } from "#src/commands-base.js";
+import * as configurator from "#src/config.js";
+import { GesAPI } from "#src/ges-api.js";
+import { getProject } from "#src/commands/projects/show.js";
 
 export function register(program: Command) {
   program

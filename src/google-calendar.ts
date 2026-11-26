@@ -1,10 +1,10 @@
 import type { Auth } from "googleapis";
 import { calendar_v3, google } from "googleapis";
-import type { AgendaItem } from "./interfaces/agenda.interface.js";
+import type { AgendaItem } from "#src/interfaces/agenda.interface.js";
 import { formatRFC3339 } from "date-fns";
 import cliProgress from "cli-progress";
 import { styleText } from "node:util";
-import { getCampusLocation } from "./campus-location.js";
+import { getCampusLocation } from "#src/campus-location.js";
 import { randomBytes } from "node:crypto";
 import http from "node:http";
 import type { AddressInfo, Socket } from "node:net";

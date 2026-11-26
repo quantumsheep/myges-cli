@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { pkg } from "./package-info.js";
+import { pkg } from "#src/package-info.js";
 
 export interface GlobalCommandOptions {
   debug?: boolean;
