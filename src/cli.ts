@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-import updateNotifier from 'update-notifier';
-import * as commands from './commands';
-import * as commandsBase from './commands-base';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require('../package.json');
+import updateNotifier from "update-notifier";
+import * as commands from "@/commands/index.js";
+import * as commandsBase from "@/commands-base.js";
+import { pkg } from "@/package-info.js";
 
 const notifier = updateNotifier({
   pkg,

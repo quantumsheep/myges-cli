@@ -1,17 +1,17 @@
-import { Command } from 'commander';
-
-const pkg = require('../package.json');
+import { Command } from "commander";
+import { pkg } from "@/package-info.js";
 
 export interface GlobalCommandOptions {
-  debug: boolean;
+  debug?: boolean;
 }
 
 export function init() {
   const program = new Command()
     .version(pkg.version)
-    .option('-d, --debug', 'debug mode')
-    .on('option:debug', () => {
-      process.env.DEBUG = 'true';
+    .allowExcessArguments()
+    .option("-d, --debug", "debug mode")
+    .on("option:debug", () => {
+      process.env.DEBUG = "true";
     });
 
   program.action(() => program.help());
@@ -19,20 +19,21 @@ export function init() {
   return program;
 }
 
-export function errorHandler(
-  action: (...args: unknown[]) => void | Promise<void>,
-) {
-  return async (...args: unknown[]) => {
-    const options = args.pop() as GlobalCommandOptions;
+/** Prints an error: the full error in debug mode, else only its message. */
+export function printError(e: unknown, debug = !!process.env.DEBUG) {
+  if (debug) {
+    console.error(e);
+  } else {
+    console.error(e instanceof Error ? e.message : e);
+  }
+}
 
+export function errorHandler<A extends unknown[]>(action: (...args: A) => void | Promise<void>) {
+  return async (...args: A) => {
     try {
-      await action(...args, options);
+      await action(...args);
     } catch (e) {
-      if (process.env.DEBUG) {
-        console.error(e);
-      } else {
-        console.error(e.message);
-      }
+      printError(e);
     }
   };
 }

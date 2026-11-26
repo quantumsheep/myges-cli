@@ -4,19 +4,34 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build and publish package
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC)
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v7
         with:
-          node-version: "14.x"
-          registry-url: "https://registry.npmjs.org"
+          persist-credentials: false
 
-      - run: npm install
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      # This job can publish: never run dependency install scripts here.
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm test
+      # dist/ is already built: skip the lifecycle scripts (prepare) on publish
+      - run: npm publish --provenance --access public --ignore-scripts

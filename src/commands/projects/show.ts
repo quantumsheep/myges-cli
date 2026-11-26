@@ -1,26 +1,28 @@
-import colors from 'colors';
-import { Command } from 'commander';
-import inquirer from 'inquirer';
-import { errorHandler, GlobalCommandOptions } from '../../commands-base';
-import * as configurator from '../../config';
-import * as display from '../../display';
-import { GesAPI } from '../../ges-api';
-import { Project } from '../../interfaces/project.interface';
+import { styleText } from "node:util";
+import type { Command } from "commander";
+import inquirer from "inquirer";
+import type { GlobalCommandOptions } from "@/commands-base.js";
+import { errorHandler } from "@/commands-base.js";
+import * as configurator from "@/config.js";
+import * as display from "@/display.js";
+import { formatPresentationDate } from "@/dates.js";
+import { GesAPI } from "@/ges-api.js";
+import type { Project } from "@/interfaces/project.interface.js";
 
 export function register(program: Command) {
   program
-    .command('show [id]')
-    .option('-r, --raw', 'output the raw data')
-    .option('-y, --year <year>', 'pre-select a year')
+    .command("show [id]")
+    .option("-r, --raw", "output the raw data")
+    .option("-y, --year <year>", "pre-select a year")
     .action(errorHandler(action));
 }
 
 interface CommandOptions extends GlobalCommandOptions {
-  raw: boolean;
+  raw?: boolean;
   year?: string;
 }
 
-async function action(id: string, options: CommandOptions) {
+async function action(id: string | undefined, options: CommandOptions) {
   const config = await configurator.load(true);
   const api = new GesAPI(config);
 
@@ -32,41 +34,33 @@ async function action(id: string, options: CommandOptions) {
     const { uid } = await api.getProfile();
 
     const group = project.groups.find(
-      (group) =>
-        !!(group.project_group_students || []).find(
-          (student) => student.u_id === uid,
-        ),
+      (group) => !!(group.project_group_students ?? []).find((student) => student.u_id === uid),
     );
 
-    let group_infos = {};
+    let group_infos: Record<string, string> = {};
 
     if (group) {
       group_infos = {
         Group: `${group.group_name} (${group.project_group_id})`,
       };
 
-      if (group.date_presentation > 0) {
-        const date = new Date(group.date_presentation);
-
-        group_infos['Presentation Date'] = `${date.toDateString()} at ${date
-          .getHours()
-          .toString()
-          .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      if (group.date_presentation && group.date_presentation > 0) {
+        group_infos["Presentation Date"] = formatPresentationDate(group.date_presentation);
       }
     }
 
     display.table(
       [
         {
-          Name: colors.cyan('ID'),
+          Name: styleText("cyan", "ID"),
           Value: project.project_id,
         },
         {
-          Name: colors.cyan('Name'),
+          Name: styleText("cyan", "Name"),
           Value: project.name,
         },
         ...Object.keys(group_infos).map((key) => ({
-          Name: colors.cyan(key),
+          Name: styleText("cyan", key),
           Value: group_infos[key],
         })),
       ],
@@ -75,24 +69,24 @@ async function action(id: string, options: CommandOptions) {
   }
 }
 
-export async function getProject(id?: string, options?: { year?: string }) {
+export async function getProject(id?: string, options: { year?: string } = {}) {
   const config = await configurator.load(true);
   const api = new GesAPI(config);
 
-  let project: Project = null;
+  let project: Project | undefined;
 
   if (!id) {
     if (!options.year) {
-      const answers = await inquirer.prompt([
+      const answers = await inquirer.prompt<{ year: number }>([
         {
-          message: 'Choose a year',
-          name: 'year',
-          type: 'list',
+          message: "Choose a year",
+          name: "year",
+          type: "select",
           choices: await api.getYears(),
         },
       ]);
 
-      options.year = answers.year;
+      options.year = String(answers.year);
     }
 
     const projects = await api.getProjects(options.year);
@@ -101,11 +95,11 @@ export async function getProject(id?: string, options?: { year?: string }) {
       throw new Error(`No projects found for year ${options.year}.`);
     }
 
-    const answers = await inquirer.prompt([
+    const answers = await inquirer.prompt<{ project: number }>([
       {
-        message: 'Choose a project',
-        name: 'project',
-        type: 'list',
+        message: "Choose a project",
+        name: "project",
+        type: "select",
         choices: projects.map((project) => ({
           name: project.name,
           value: project.project_id,
@@ -113,8 +107,8 @@ export async function getProject(id?: string, options?: { year?: string }) {
       },
     ]);
 
-    id = answers.project;
-    project = projects.find((project) => project.project_id === id);
+    id = String(answers.project);
+    project = projects.find((project) => project.project_id === answers.project);
   } else {
     project = await api.getProject(id);
   }
