@@ -5,11 +5,12 @@ import { errorHandler } from "@/commands-base.js";
 import * as configurator from "@/config.js";
 import { GesAPI } from "@/ges-api.js";
 import { getProject } from "@/commands/projects/show.js";
+import type { ProjectGroup } from "@/interfaces/project.interface.js";
 
 export function register(program: Command) {
   program
     .command("join [id]")
-    .option("-g, --group", "pre-select a group")
+    .option("-g, --group <id>", "pre-select a group by its id (see `projects groups`)")
     .option("-y, --year <year>", "pre-select a year")
     .action(errorHandler(action));
 }
@@ -57,19 +58,7 @@ async function action(id: string | undefined, options: CommandOptions) {
     options.group = String(answers.group);
   }
 
-  const numberValue = parseInt(options.group, 10);
-  if (isNaN(numberValue)) {
-    console.error("Incorrect group number.");
-    return;
-  }
-
-  const groups = project.groups.sort((a, b) => a.project_group_id - b.project_group_id);
-
-  if (numberValue > groups.length) {
-    group = groups.find((group) => group.project_group_id === numberValue);
-  } else {
-    group = groups[numberValue - 1];
-  }
+  group = findGroup(project.groups, options.group);
 
   if (!group) {
     console.error("Choosen group not found.");
@@ -87,4 +76,9 @@ async function action(id: string | undefined, options: CommandOptions) {
       console.error("Failed to join the project's group.");
     }
   }
+}
+
+/** Finds a group by its `project_group_id`, as given by `-g` or by the prompt. */
+export function findGroup(groups: ProjectGroup[], id: string) {
+  return groups.find((group) => group.project_group_id === Number(id));
 }

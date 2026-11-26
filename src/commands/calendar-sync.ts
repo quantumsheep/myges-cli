@@ -6,7 +6,9 @@ import { errorHandler, printError } from "@/commands-base.js";
 import * as configurator from "@/config.js";
 import { GesAPI } from "@/ges-api.js";
 import type { GoogleConfig } from "@/google-calendar.js";
-import { pushToCalendar, removeEvents } from "@/google-calendar.js";
+import type { AgendaItem } from "@/interfaces/agenda.interface.js";
+import type { calendar_v3 } from "googleapis";
+import { syncCalendar } from "@/google-calendar.js";
 
 export function register(program: Command) {
   program
@@ -64,27 +66,44 @@ async function action(days: string | undefined, options: CommandOptions) {
       `Loading agenda from ${format(start, "dd-MM-yyyy")} to ${format(end, "dd-MM-yyyy")}...`,
     );
 
-    let agenda = await api.getAgenda(start, end);
-
-    if (agenda.length === 0) {
-      console.log("Nothing to display in this dates range.");
-      console.log("Removing previous events on calendar in given date range...");
-      removeEvents(start, end, calendarId, credentials);
-      return;
-    }
-
-    agenda = agenda
-      .sort((a, b) => a.start_date - b.start_date)
-      .filter(
-        (item, index, agendaArray) =>
-          index === 0 || item.reservation_id !== agendaArray[index - 1].reservation_id,
-      );
-    console.log(`Found ${agenda.length} events in this date range`);
-    console.log("Removing previous events on calendar in given date range...");
-    removeEvents(start, end, calendarId, credentials);
-
-    pushToCalendar(agenda, calendarId, credentials);
+    await syncAgenda(await api.getAgenda(start, end), start, end, calendarId, credentials);
   } catch (e) {
     printError(e, options.debug);
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * Replaces the Google Calendar events between the two dates by the agenda.
+ * Sets the exit code to 1 if the sync fails or if one API call fails.
+ */
+export async function syncAgenda(
+  agenda: AgendaItem[],
+  start: Date,
+  end: Date,
+  calendarId: string,
+  credentials: GoogleConfig,
+  calendar?: calendar_v3.Calendar,
+) {
+  try {
+    if (agenda.length === 0) {
+      console.log("Nothing to display in this dates range.");
+    } else {
+      agenda = agenda
+        .sort((a, b) => a.start_date - b.start_date)
+        .filter(
+          (item, index, agendaArray) =>
+            index === 0 || item.reservation_id !== agendaArray[index - 1].reservation_id,
+        );
+      console.log(`Found ${agenda.length} events in this date range`);
+    }
+    console.log("Removing previous events on calendar in given date range...");
+
+    if ((await syncCalendar(agenda, start, end, calendarId, credentials, calendar)) > 0) {
+      process.exitCode = 1;
+    }
+  } catch (e) {
+    printError(e);
+    process.exitCode = 1;
   }
 }
