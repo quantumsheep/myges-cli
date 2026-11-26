@@ -6,7 +6,9 @@ import cliProgress from 'cli-progress';
 import colors from 'colors';
 import { getCampusLocation } from './campus-location';
 import { Config } from './config';
-import inquirer from 'inquirer';
+import { randomBytes } from 'crypto';
+import http from 'http';
+import { AddressInfo, Socket } from 'net';
 import Calendar = calendar_v3.Calendar;
 
 import Schema$Events = calendar_v3.Schema$Events;
@@ -252,42 +254,65 @@ function getClient(
   token: GoogleToken,
 ): OAuth2Client {
   const { client_secret, client_id } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    'urn:ietf:wg:oauth:2.0:oob',
-  );
+  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret);
 
   oAuth2Client.setCredentials(token);
   return oAuth2Client;
 }
 
-async function promptGoogleAccessToken(
-  authUrl: string,
-  oAuth2Client: OAuth2Client,
-) {
-  const { token_code } = await inquirer.prompt([
-    {
-      message:
-        "Authorize this app by visiting this url and retrieving authorization code : \n'" +
-        authUrl +
-        "'\nPast authorization code -> ",
-      name: 'token_code',
-    },
-  ]);
+/**
+ * Starts a local HTTP server and waits for Google to redirect the user's
+ * browser to it with the authorization code (loopback OAuth flow, required
+ * since Google deprecated the out-of-band flow).
+ */
+function waitForAuthorizationCode(
+  server: http.Server,
+  state: string,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const sockets = new Set<Socket>();
+    server.on('connection', (socket) => {
+      sockets.add(socket);
+      socket.on('close', () => sockets.delete(socket));
+    });
 
-  try {
-    const { tokens } = await oAuth2Client.getToken(token_code);
-    if (!tokens) {
-      throw new Error(
-        'An error has occurred when retrieving Google API authorization code',
-      );
-    }
-    return tokens;
-  } catch (e) {
-    console.error(e.message);
-    return promptGoogleAccessToken(authUrl, oAuth2Client);
-  }
+    const timeout = setTimeout(() => {
+      server.close();
+      sockets.forEach((socket) => socket.destroy());
+      reject(new Error('Google authorization timed out after 5 minutes'));
+    }, 5 * 60 * 1000);
+
+    server.on('request', (req, res) => {
+      const url = new URL(req.url, 'http://127.0.0.1');
+      const code = url.searchParams.get('code');
+      const error = url.searchParams.get('error');
+      const returnedState = url.searchParams.getAll('state');
+
+      if (returnedState.length !== 1 || returnedState[0] !== state) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Authorization failed: invalid state.');
+      } else if (error) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`Authorization failed: ${error}`);
+        clearTimeout(timeout);
+        server.close();
+        reject(new Error(`Google authorization failed: ${error}`));
+      } else if (code) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          '<h1>Authorization received!</h1><p>You can close this tab and go back to the terminal.</p>',
+        );
+        clearTimeout(timeout);
+        server.close();
+        resolve(code);
+      } else {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          '<h1>Authorization failed.</h1><p>Go back to the terminal and try again.</p>',
+        );
+      }
+    });
+  });
 }
 
 export async function getGoogleAccessToken(
@@ -295,22 +320,41 @@ export async function getGoogleAccessToken(
 ): Promise<GoogleToken> {
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
   const { client_secret, client_id } = credentials.installed;
+  const state = randomBytes(32).toString('hex');
+
+  const server = http.createServer();
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
-    'urn:ietf:wg:oauth:2.0:oob',
+    `http://localhost:${port}`,
   );
 
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
+    state,
   });
 
+  console.log(
+    "Authorize this app by visiting this url (the authorization code will be retrieved automatically) :\n'" +
+      authUrl +
+      "'\nWaiting for authorization...",
+  );
+
   try {
-    return await promptGoogleAccessToken(authUrl, oAuth2Client);
+    const code = await waitForAuthorizationCode(server, state);
+    const { tokens } = await oAuth2Client.getToken(code);
+    if (!tokens) {
+      throw new Error(
+        'An error has occurred when retrieving Google API authorization code',
+      );
+    }
+    return tokens;
   } catch (e) {
-    throw new Error(
-      `Prompt couldn't be rendered in the current environment: ${e}`,
-    );
+    server.close();
+    throw new Error(`Google authorization failed: ${e.message ?? e}`);
   }
 }
